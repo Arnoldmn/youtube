@@ -1,0 +1,20 @@
+{
+  "name": "iphix-communications",
+  "version": "1.0.0",
+  "private": true,
+  "description": "IPHIX COMMUNICATIONS — online store for phone accessories, spare parts and repair services with WhatsApp checkout, PDF receipts, order tracking and an affiliate programme.",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server/index.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "express": "^5.2.1",
+    "pdfkit": "^0.20.2"
+  }
+}

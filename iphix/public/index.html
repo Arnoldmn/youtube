@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IPHIX COMMUNICATIONS — Phone Accessories, Spares & Repairs</title>
+  <meta name="description" content="Shop phone accessories, genuine-quality spare parts and repair services at IPHIX COMMUNICATIONS. Order online, confirm on WhatsApp, track your delivery.">
+  <meta name="theme-color" content="#e62e04">
+  <meta property="og:title" content="IPHIX COMMUNICATIONS">
+  <meta property="og:description" content="Phone accessories, spare parts & repairs. Order online and confirm on WhatsApp.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e62e04'/><text x='50' y='70' font-size='60' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'>i</text></svg>">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="topstrip">
+    <div class="wrap topstrip-inner">
+      <span>🚚 Free delivery over <b id="free-over">KES 5,000</b></span>
+      <span class="hide-sm">📦 Wholesale prices on 10+ pieces</span>
+      <span class="hide-sm">💰 <a href="#/earn">Earn by sharing — become a promoter</a></span>
+      <a href="#/track">📍 Track order</a>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="wrap header-inner">
+      <a href="#/" class="logo" aria-label="IPHIX COMMUNICATIONS home">
+        <span class="logo-mark">i</span>
+        <span class="logo-text"><b>IPHIX</b><small>COMMUNICATIONS</small></span>
+      </a>
+      <form class="search" id="search-form" role="search">
+        <input id="search-input" type="search" placeholder="Search screens, batteries, chargers, iPhone 11…" autocomplete="off" aria-label="Search products">
+        <button type="submit" aria-label="Search">🔍</button>
+      </form>
+      <nav class="header-actions">
+        <a href="#/account" class="h-action" id="account-link"><span class="h-ico">👤</span><span class="h-label" id="account-label">Sign in</span></a>
+        <a href="#/cart" class="h-action cart-link"><span class="h-ico">🛒</span><span class="h-label">Cart</span><span class="badge" id="cart-count" hidden>0</span></a>
+      </nav>
+    </div>
+    <nav class="mainnav" id="mainnav" aria-label="Main menu">
+      <div class="wrap mainnav-inner">
+        <div class="nav-item has-mega" data-mega="accessories"><a href="#/shop/accessories">Accessories</a></div>
+        <div class="nav-item has-mega" data-mega="spares"><a href="#/shop/spares">Phone Spares</a></div>
+        <div class="nav-item has-mega" data-mega="services"><a href="#/shop/services">Repair Services</a></div>
+        <div class="nav-item has-mega" data-mega="brands"><a href="#/brands">Brands</a></div>
+        <div class="nav-item"><a href="#/new">New Arrivals</a></div>
+        <div class="nav-item"><a href="#/deals" class="hot">🔥 Deals</a></div>
+        <div class="nav-item"><a href="#/earn" class="earn">💰 Earn</a></div>
+        <div class="nav-item admin-only" hidden><a href="#/admin">⚙️ Admin</a></div>
+      </div>
+      <div class="mega" id="mega" hidden></div>
+    </nav>
+  </header>
+
+  <main id="app" class="wrap" tabindex="-1">
+    <div class="loading">Loading…</div>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-grid">
+      <div>
+        <div class="logo logo-footer"><span class="logo-mark">i</span><span class="logo-text"><b>IPHIX</b><small>COMMUNICATIONS</small></span></div>
+        <p>Phone accessories, spare parts and professional repairs — retail &amp; wholesale.</p>
+        <p id="footer-address"></p>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <a href="#/shop/accessories">Accessories</a>
+        <a href="#/shop/spares">Phone Spares</a>
+        <a href="#/shop/services">Repair Services</a>
+        <a href="#/brands">Shop by brand</a>
+        <a href="#/deals">Deals</a>
+      </div>
+      <div>
+        <h4>Help</h4>
+        <a href="#/track">Track your order</a>
+        <a href="#/account">My account &amp; orders</a>
+        <a id="footer-wa" href="#" target="_blank" rel="noopener">Chat on WhatsApp</a>
+      </div>
+      <div>
+        <h4>Make money with us</h4>
+        <a href="#/earn">Promoter programme</a>
+        <p class="muted small" id="footer-earn"></p>
+      </div>
+    </div>
+    <div class="wrap copyright">© <span id="year"></span> IPHIX COMMUNICATIONS. All rights reserved.</div>
+  </footer>
+
+  <a class="wa-float" id="wa-float" href="#" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp">
+    <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><path fill="#fff" d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3zm0 23.7c-2 0-4-.6-5.7-1.6l-.4-.2-3.9 1 1-3.8-.3-.4A10.7 10.7 0 1 1 16 26.7zm5.9-8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.8 8.8 0 0 1-4.4-3.8c-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.3 5.2 4.6 1.9.8 2.7.9 3.6.7.6-.1 1.9-.8 2.1-1.5.3-.7.3-1.4.2-1.5l-.6-.4z"/></svg>
+  </a>
+  <div class="toast-stack" id="toasts" aria-live="polite"></div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
