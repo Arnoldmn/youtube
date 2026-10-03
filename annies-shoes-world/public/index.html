@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Annie's Shoes World</title>
+  <meta name="description" content="Annie's Shoes World: women's shoes, clothing, handbags and watches. Order and track on WhatsApp.">
+  <meta name="theme-color" content="#b83b5e">
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+  <div class="announce">
+    <span><i class="fa-brands fa-whatsapp"></i> Order &amp; track on WhatsApp</span>
+    <span class="dot">•</span>
+    <span>Free delivery over $150</span>
+    <span class="dot">•</span>
+    <span>Code <b>ANNIE10</b> for 10% off</span>
+  </div>
+
+  <header class="header">
+    <button class="icon-btn burger" id="burger" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+    <a href="#" class="logo" aria-label="Annie's Shoes World home">
+      <span class="logo-text">Annie's<small>SHOES WORLD</small></span>
+    </a>
+    <nav class="nav" id="nav">
+      <a href="#shop" data-nav-category="Shoes">Shoes</a>
+      <a href="#shop" data-nav-category="Clothing">Clothing</a>
+      <a href="#shop" data-nav-category="Handbags">Handbags</a>
+      <a href="#shop" data-nav-category="Watches">Watches</a>
+      <a href="#shop" data-nav-sale="true" class="nav-sale">Sale</a>
+    </nav>
+    <div class="header-actions">
+      <label class="search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="search" type="search" placeholder="Search heels, dresses, bags…" autocomplete="off" aria-label="Search">
+      </label>
+      <button class="icon-btn" id="accountBtn" aria-label="Account"><i class="fa-regular fa-user"></i></button>
+      <button class="icon-btn" id="wishlistBtn" aria-label="Wishlist">
+        <i class="fa-regular fa-heart"></i><span class="badge" id="wishCount" hidden>0</span>
+      </button>
+      <button class="icon-btn" id="cartBtn" aria-label="Shopping bag">
+        <i class="fa-solid fa-bag-shopping"></i><span class="badge" id="cartCount" hidden>0</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero slider -->
+    <section class="slider" id="slider" aria-roledescription="carousel" aria-label="Featured collections">
+      <div class="slides" id="slides"></div>
+      <button class="slider-arrow prev" id="slidePrev" aria-label="Previous slide"><i class="fa-solid fa-chevron-left"></i></button>
+      <button class="slider-arrow next" id="slideNext" aria-label="Next slide"><i class="fa-solid fa-chevron-right"></i></button>
+      <div class="slider-dots" id="slideDots" role="tablist"></div>
+    </section>
+
+    <section class="departments" id="departments" aria-label="Shop by department"></section>
+
+    <section class="shop" id="shop">
+      <div class="shop-head">
+        <div>
+          <p class="kicker">The collection</p>
+          <h2 id="shopTitle">Shop all</h2>
+        </div>
+        <div class="chips" id="categoryChips"></div>
+      </div>
+
+      <div class="shop-body">
+        <aside class="filters" id="filters" aria-label="Filters">
+          <div class="filters-head">
+            <h3>Filters</h3>
+            <button class="link-btn" id="clearFilters">Clear all</button>
+            <button class="icon-btn close-filters" id="closeFilters" aria-label="Close filters"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="filter-group">
+            <h4>Style</h4>
+            <div id="typeFilters" class="checks"></div>
+          </div>
+          <div class="filter-group">
+            <h4>Max price <span id="priceLabel"></span></h4>
+            <input type="range" id="priceRange" min="20" step="5" aria-label="Maximum price">
+          </div>
+          <div class="filter-group">
+            <label class="check"><input type="checkbox" id="saleOnly"> <span>On sale only</span></label>
+          </div>
+        </aside>
+
+        <div class="results">
+          <div class="toolbar">
+            <button class="btn btn-ghost btn-sm open-filters" id="openFilters"><i class="fa-solid fa-sliders"></i> Filters</button>
+            <p id="resultCount" class="muted"></p>
+            <label class="sort">Sort
+              <select id="sort">
+                <option value="featured">Bestsellers</option>
+                <option value="newest">New in</option>
+                <option value="price-asc">Price: low to high</option>
+                <option value="price-desc">Price: high to low</option>
+                <option value="rating">Top rated</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid" id="grid"></div>
+          <div class="empty" id="empty" hidden>
+            <i class="fa-regular fa-face-frown"></i>
+            <p>Nothing matches those filters.</p>
+            <button class="btn btn-primary btn-sm" id="emptyReset">Reset filters</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wa-steps" aria-label="How ordering works">
+      <div class="wa-steps-head">
+        <i class="fa-brands fa-whatsapp"></i>
+        <h2>Shop now, chat with us on WhatsApp</h2>
+        <p>No complicated payments. Every order is confirmed personally by Annie.</p>
+      </div>
+      <ol>
+        <li><span>1</span><b>Fill your bag</b><p>Pick your favourites, sizes and colours.</p></li>
+        <li><span>2</span><b>Sign in &amp; check out</b><p>Add your delivery details in seconds.</p></li>
+        <li><span>3</span><b>Send on WhatsApp</b><p>Your order opens in WhatsApp, ready to send.</p></li>
+        <li><span>4</span><b>Track it</b><p>Follow every step here or on WhatsApp.</p></li>
+      </ol>
+      <button class="btn btn-wa" id="trackCta"><i class="fa-solid fa-location-dot"></i> Track an order</button>
+    </section>
+
+    <section class="newsletter">
+      <div>
+        <h2>Join the inner circle</h2>
+        <p>New arrivals, restocks and members-only offers.</p>
+      </div>
+      <form id="newsletterForm" class="newsletter-form" novalidate>
+        <input type="email" id="newsletterEmail" placeholder="you@email.com" aria-label="Email address" required>
+        <button class="btn btn-primary" type="submit">Subscribe</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-brand">
+      <span class="logo-text">Annie's<small>SHOES WORLD</small></span>
+      <p class="muted">Shoes, clothing, handbags and watches for every woman and every moment.</p>
+    </div>
+    <div>
+      <h4>Shop</h4>
+      <a href="#shop" data-nav-category="Shoes">Shoes</a><a href="#shop" data-nav-category="Clothing">Clothing</a>
+      <a href="#shop" data-nav-category="Handbags">Handbags</a><a href="#shop" data-nav-category="Watches">Watches</a>
+    </div>
+    <div>
+      <h4>Help</h4>
+      <a href="#/track" data-track-link>Track your order</a>
+      <a href="#" data-chat-link>Chat on WhatsApp</a>
+      <a href="#" data-orders-link>My orders</a>
+    </div>
+    <div>
+      <h4>Follow</h4>
+      <div class="socials">
+        <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+        <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+        <a href="#" data-chat-link aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+      </div>
+    </div>
+    <p class="copyright muted">© <span id="year"></span> Annie's Shoes World. All rights reserved.</p>
+  </footer>
+
+  <a class="wa-float" href="#" data-chat-link aria-label="Chat with us on WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+
+  <!-- Overlays -->
+  <div class="scrim" id="scrim" hidden></div>
+
+  <aside class="drawer" id="cartDrawer" aria-label="Shopping bag" aria-hidden="true">
+    <div class="drawer-head">
+      <h3>Your bag <span class="muted" id="cartHeadCount"></span></h3>
+      <button class="icon-btn" data-close aria-label="Close bag"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="ship-meter" id="shipMeter"></div>
+    <div class="drawer-body" id="cartItems"></div>
+    <div class="drawer-foot" id="cartFoot"></div>
+  </aside>
+
+  <aside class="drawer" id="wishDrawer" aria-label="Wishlist" aria-hidden="true">
+    <div class="drawer-head">
+      <h3>Wishlist</h3>
+      <button class="icon-btn" data-close aria-label="Close wishlist"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body" id="wishItems"></div>
+  </aside>
+
+  <aside class="drawer" id="accountDrawer" aria-label="My account" aria-hidden="true">
+    <div class="drawer-head">
+      <h3>My account</h3>
+      <button class="icon-btn" data-close aria-label="Close account"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body" id="accountBody"></div>
+  </aside>
+
+  <aside class="drawer drawer-left" id="mobileMenu" aria-label="Menu" aria-hidden="true">
+    <div class="drawer-head">
+      <span class="logo-text">Annie's<small>SHOES WORLD</small></span>
+      <button class="icon-btn" data-close aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="drawer-body mobile-links" id="mobileLinks"></div>
+  </aside>
+
+  <div class="modal" id="productModal" role="dialog" aria-modal="true" aria-label="Product details" aria-hidden="true">
+    <div class="modal-card product-modal" id="productModalBody"></div>
+  </div>
+
+  <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-label="Sign in" aria-hidden="true">
+    <div class="modal-card auth-modal" id="authBody"></div>
+  </div>
+
+  <div class="modal" id="checkoutModal" role="dialog" aria-modal="true" aria-label="Checkout" aria-hidden="true">
+    <div class="modal-card checkout-modal" id="checkoutBody"></div>
+  </div>
+
+  <div class="modal" id="trackModal" role="dialog" aria-modal="true" aria-label="Track order" aria-hidden="true">
+    <div class="modal-card track-modal" id="trackBody"></div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="js/products.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

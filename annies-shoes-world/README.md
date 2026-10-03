@@ -1,45 +1,88 @@
-# Annie's Shoes World 👟
+# Annie's Shoes World 💕
 
-A sneaker retail storefront built with plain HTML, CSS and JavaScript. There's no build step and no backend.
+An online boutique for **women's shoes, clothing, handbags and watches**. Customers sign in to check out, the order is sent to the shop on **WhatsApp**, and buyers can **track their order** on the site or through WhatsApp.
 
 ## Features
 
-- **Hero drop** with switchable colorways and a live countdown to the next Friday drop
-- **Catalog** of 16 styles across 6 brands (Lifestyle, Running, Basketball, Skate, Trail)
-- **Search, filters and sort**: search by name, brand or colorway; filter by category, brand, gender, size (sold-out sizes are skipped), max price and sale; sort by featured, newest, price or rating
-- **Product view** with colorway picker, size grid (sold-out sizes disabled), quantity and wishlist
-- **Bag** with quantity controls, a free-shipping progress meter, promo codes, shipping and tax
-- **Wishlist**; bag and wishlist are saved in `localStorage`
-- **Checkout** with form validation and an order confirmation. It's a demo: no payment is taken and nothing leaves the browser
-- Responsive layout with a mobile menu and a filter drawer
-- Shoe artwork is generated as SVG from each colorway (`js/shoe-art.js`), so there are no image files to host
+**Storefront**
+- Hero image slider: autoplay, arrows, dots, swipe on mobile, pauses on hover
+- Four departments: Shoes, Clothing, Handbags, Watches (20 products in `public/js/products.js`)
+- Search, filter by department, style, max price and sale, plus sorting
+- Product view with colour picker and sizes (US shoe sizes, XS–XL clothing, one size for bags and watches); sold-out sizes are disabled
+- Bag with promo codes (`ANNIE10`, `QUEEN20`) and a free-delivery meter; wishlist
+- Responsive layout, floating WhatsApp chat button
 
-Promo codes: `ANNIE10` (10% off), `FRESHKICKS` ($20 off).
+**Accounts and checkout**
+- Sign up / sign in is required before checkout. Customers give their WhatsApp number at sign-up
+- Passwords are hashed with scrypt; sessions use HttpOnly, SameSite cookies; login is rate-limited
+- The server re-prices every order from the catalog, so customers can't change prices in their browser
 
-## Run it
+**WhatsApp ordering and tracking**
+- Placing an order saves it with an order number (e.g. `ASW-7K2Q9P`) and opens WhatsApp with the full order (items, sizes, colours, totals, address, payment method and tracking link) ready to send to the shop
+- Buyers track orders at `/#/track/ASW-…` (order number plus the last 4 digits of their WhatsApp number), from **My account**, or with a "Track on WhatsApp" button
+- **Order desk** at `/admin`: Annie sees all orders, changes their status (Order placed → Confirmed → Packed → Out for delivery → Delivered, or Cancelled), adds a note, and WhatsApp opens with the update ready to send to the buyer
+- **Optional WhatsApp Business Cloud API:** buyers message an order number to the shop's WhatsApp and get an instant automatic status reply, and status updates are sent automatically
 
-Open `index.html` in a browser, or serve the folder:
+## Getting started
+
+Requires Node.js 18+. There are no npm dependencies to install.
 
 ```bash
-npm start      # serves on http://localhost:5173
+cp .env.example .env     # then set WHATSAPP_NUMBER and ADMIN_PASSWORD
+npm start                # http://localhost:3000   ·   order desk: http://localhost:3000/admin
 ```
 
-## Test
+| Variable | Purpose |
+| --- | --- |
+| `WHATSAPP_NUMBER` | **Required for checkout.** Shop WhatsApp number in international format, digits only (e.g. `254712345678`) |
+| `ADMIN_PASSWORD` | Enables the `/admin` order desk |
+| `DEFAULT_COUNTRY_CODE` | Lets customers type local numbers (e.g. `0712…` becomes `254712…`) |
+| `CURRENCY`, `LOCALE` | Price formatting, e.g. `KES` and `en-KE` (catalog prices are plain numbers) |
+| `PUBLIC_URL` | Your site address, used in WhatsApp tracking links |
+| `COOKIE_SECURE` | Set `true` when served over HTTPS |
+| `DATA_DIR` | Where orders and accounts are stored (default `./data`) |
+
+### Optional: automatic WhatsApp tracking (Cloud API)
+
+1. Create a WhatsApp Business app at developers.facebook.com and add your phone number.
+2. Set `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN` (any secret string you choose) and `WHATSAPP_APP_SECRET`.
+3. Point the app's webhook to `https://your-site/webhook/whatsapp`, using the same verify token, and subscribe to `messages`.
+
+When a buyer messages an order number (or just "hi"), the shop replies automatically with the status. Replies only cover orders placed from the sender's own number. Note: WhatsApp only lets businesses send free-form messages within 24 hours of the customer's last message; outside that window it needs approved templates, and the order desk falls back to opening WhatsApp for you.
+
+## Adding your own photos
+
+Put images in `public/images/` and add `image: "images/…"` to a hero slide or a product (or to a single colour) in `public/js/products.js`. Until then, each product shows a built-in illustration, which is also used if a photo fails to load.
+
+## Tests
 
 ```bash
-npm test       # unit tests for filtering, sorting, cart and totals (node:test)
+npm test
 ```
+
+Covers catalog and cart logic, WhatsApp message building, phone handling, webhook signature checks, and an end-to-end API run: sign-up → order → WhatsApp link → tracking → admin status update.
 
 ## Structure
 
 ```
-index.html        page markup
-css/styles.css    styles
-js/products.js    catalog data and promo codes
-js/store.js       pure cart/filter/totals logic (shared with tests)
-js/shoe-art.js    SVG sneaker generator
-js/app.js         UI rendering and interactions
-tests/            node:test unit tests
+server/
+  index.js       start the server
+  app.js         HTTP routes: auth, orders, tracking, admin, WhatsApp webhook, static files
+  auth.js        password hashing and sessions
+  whatsapp.js    wa.me links, order and status messages, Cloud API
+  db.js          JSON-file storage (data/db.json)
+  config.js      environment settings
+public/
+  index.html     storefront
+  admin.html     order desk
+  js/products.js catalog, hero slides, promo codes (shared with the server)
+  js/store.js    cart, filter and totals logic (shared with the server)
+  js/art.js      generated product illustrations
+  js/app.js      storefront UI
+  js/admin.js    order desk UI
+tests/
 ```
 
-To add a product, add an entry to `PRODUCTS` in `js/products.js`.
+## Deploying
+
+Any host that runs Node works (Render, Railway, Fly.io, a VPS). Mount a persistent disk for `DATA_DIR` so orders survive restarts, serve over HTTPS, and set `COOKIE_SECURE=true` and `PUBLIC_URL`.

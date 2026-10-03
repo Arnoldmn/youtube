@@ -1,74 +1,91 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { PRODUCTS, PROMO_CODES } = require("../js/products.js");
-const S = require("../js/store.js");
+const { PRODUCTS, CATEGORIES, HERO_SLIDES, PROMO_CODES } = require("../public/js/products.js");
+const S = require("../public/js/store.js");
 
 test("catalog entries are well formed", () => {
   const ids = new Set();
   for (const p of PRODUCTS) {
     assert.ok(!ids.has(p.id), `duplicate id ${p.id}`);
     ids.add(p.id);
+    assert.ok(CATEGORIES.includes(p.category), `${p.id} has unknown category`);
     assert.ok(p.colorways.length > 0);
     for (const s of p.soldOut) assert.ok(p.sizes.includes(s), `${p.id} sold-out size ${s} not offered`);
     if (p.salePrice != null) assert.ok(p.salePrice < p.price);
   }
+  for (const c of CATEGORIES) assert.ok(PRODUCTS.some((p) => p.category === c), `no products in ${c}`);
+  for (const s of HERO_SLIDES) assert.ok(PRODUCTS.some((p) => p.id === s.productId), `slide product ${s.productId} missing`);
 });
 
-test("filters by category, brand, sale, size and price", () => {
-  assert.ok(S.filterProducts(PRODUCTS, { category: "Skate" }).every((p) => p.category === "Skate"));
-  assert.ok(S.filterProducts(PRODUCTS, { brands: ["Rift"] }).every((p) => p.brand === "Rift"));
+test("filters by category, type, sale and price", () => {
+  assert.ok(S.filterProducts(PRODUCTS, { category: "Watches" }).every((p) => p.category === "Watches"));
+  assert.ok(S.filterProducts(PRODUCTS, { types: ["Heels"] }).every((p) => p.type === "Heels"));
   assert.ok(S.filterProducts(PRODUCTS, { onSale: true }).every((p) => p.salePrice != null));
-  assert.ok(S.filterProducts(PRODUCTS, { maxPrice: 100 }).every((p) => S.unitPrice(p) <= 100));
-  const size13 = S.filterProducts(PRODUCTS, { size: 13 });
-  assert.ok(size13.every((p) => p.sizes.includes(13) && !p.soldOut.includes(13)));
-  assert.ok(!size13.some((p) => p.id === "w-orbit-1"), "sold-out size should be excluded");
+  assert.ok(S.filterProducts(PRODUCTS, { maxPrice: 90 }).every((p) => S.unitPrice(p) <= 90));
 });
 
-test("gender filter keeps unisex styles", () => {
-  const women = S.filterProducts(PRODUCTS, { genders: ["Women"] });
-  assert.ok(women.every((p) => p.gender === "Women" || p.gender === "Unisex"));
-  assert.ok(women.some((p) => p.gender === "Unisex"));
-});
-
-test("search matches name, brand and colorway", () => {
-  assert.equal(S.filterProducts(PRODUCTS, { query: "orbit" })[0].id, "w-orbit-1");
-  assert.ok(S.filterProducts(PRODUCTS, { query: "annie" }).every((p) => p.brand === "Annie's"));
-  assert.ok(S.filterProducts(PRODUCTS, { query: "matcha" }).some((p) => p.id === "k-zen-slip"));
+test("search matches name, type and colour", () => {
+  assert.equal(S.filterProducts(PRODUCTS, { query: "slip dress" })[0].id, "cl-silk-slip-dress");
+  assert.ok(S.filterProducts(PRODUCTS, { query: "tote" }).some((p) => p.id === "hb-signature-tote"));
+  assert.ok(S.filterProducts(PRODUCTS, { query: "emerald" }).some((p) => p.id === "cl-silk-slip-dress"));
 });
 
 test("sorts by effective price", () => {
   const asc = S.sortProducts(PRODUCTS, "price-asc").map(S.unitPrice);
   assert.deepEqual(asc, [...asc].sort((a, b) => a - b));
-  const desc = S.sortProducts(PRODUCTS, "price-desc").map(S.unitPrice);
-  assert.deepEqual(desc, [...desc].sort((a, b) => b - a));
 });
 
-test("cart merges identical lines and caps quantity at 10", () => {
-  let cart = S.addToCart([], { id: "w-orbit-1", colorway: 0, size: 9, qty: 2 });
-  cart = S.addToCart(cart, { id: "w-orbit-1", colorway: 0, size: 9, qty: 9 });
-  cart = S.addToCart(cart, { id: "w-orbit-1", colorway: 1, size: 9, qty: 1 });
+test("cart merges identical lines (including one-size items) and caps quantity", () => {
+  let cart = S.addToCart([], { id: "hb-signature-tote", colorway: 0, size: null, qty: 4 });
+  cart = S.addToCart(cart, { id: "hb-signature-tote", colorway: 0, size: null, qty: 9 });
+  cart = S.addToCart(cart, { id: "cl-knit-top", colorway: 1, size: "M", qty: 1 });
   assert.equal(cart.length, 2);
-  assert.equal(cart[0].qty, 10);
+  assert.equal(cart[0].qty, S.MAX_QTY);
   cart = S.updateQty(cart, S.lineKey(cart[1]), 0);
   assert.equal(cart.length, 1);
 });
 
-test("totals apply sale price, promo, shipping and tax", () => {
-  // Vapor Run on sale at 119 → under the free-shipping threshold
-  let t = S.cartTotals([{ id: "s-vapor-run", colorway: 0, size: 8, qty: 1 }], PRODUCTS, null, PROMO_CODES);
-  assert.equal(t.subtotal, 119);
-  assert.equal(t.shipping, S.SHIPPING_FEE);
-  assert.equal(t.tax, 9.52);
-  assert.equal(t.total, 140.52);
+test("resolveLines validates sizes, colours and quantities against the catalog", () => {
+  const ok = S.resolveLines(
+    [
+      { id: "sh-velvet-stiletto", colorway: 1, size: 7, qty: 2 },
+      { id: "cl-knit-top", colorway: 0, size: "S", qty: 1 },
+      { id: "wa-rose-classic", colorway: 0, size: null, qty: 1 },
+    ],
+    PRODUCTS
+  );
+  assert.deepEqual(ok.errors, []);
+  assert.equal(ok.lines[0].lineTotal, 240);
+  assert.equal(ok.lines[0].colorName, "Noir");
+  assert.equal(ok.lines[1].unitPrice, 32); // sale price, not client-supplied
+  assert.equal(ok.lines[2].size, null);
 
-  // 2 × Apex Hi (185) with 10% off → free shipping
-  t = S.cartTotals([{ id: "w-apex-hi", colorway: 0, size: 10, qty: 2 }], PRODUCTS, "annie10", PROMO_CODES);
-  assert.equal(t.subtotal, 370);
-  assert.equal(t.discount, 37);
-  assert.equal(t.shipping, 0);
-  assert.equal(t.total, 359.64);
+  const bad = (item) => S.resolveLines([item], PRODUCTS).errors[0];
+  assert.match(bad({ id: "nope", colorway: 0, qty: 1 }), /no longer available/);
+  assert.match(bad({ id: "sh-velvet-stiletto", colorway: 0, size: 11, qty: 1 }), /sold out/);
+  assert.match(bad({ id: "sh-velvet-stiletto", colorway: 0, size: 99, qty: 1 }), /choose a size/);
+  assert.match(bad({ id: "sh-velvet-stiletto", colorway: 9, size: 7, qty: 1 }), /colour/);
+  assert.match(bad({ id: "sh-velvet-stiletto", colorway: 0, size: 7, qty: 0 }), /quantity/);
+  assert.match(S.resolveLines([], PRODUCTS).errors[0], /empty/);
+});
 
-  // Unknown code is ignored; empty cart costs nothing
-  assert.equal(S.cartTotals([], PRODUCTS, "NOPE", PROMO_CODES).total, 0);
-  assert.equal(S.cartTotals([], PRODUCTS, "NOPE", PROMO_CODES).promo, undefined);
+test("totals apply sale price, promo and delivery", () => {
+  let t = S.cartTotals([{ id: "cl-knit-top", colorway: 0, size: "S", qty: 1 }], PRODUCTS, null, PROMO_CODES);
+  assert.equal(t.subtotal, 32);
+  assert.equal(t.delivery, S.DELIVERY_FEE);
+  assert.equal(t.total, 42);
+
+  t = S.cartTotals([{ id: "hb-signature-tote", colorway: 0, size: null, qty: 1 }], PRODUCTS, "annie10", PROMO_CODES);
+  assert.equal(t.discount, 22);
+  assert.equal(t.delivery, 0);
+  assert.equal(t.total, 198);
+  assert.equal(t.promoCode, "ANNIE10");
+
+  assert.equal(S.cartTotals([], PRODUCTS, "toString", PROMO_CODES).promo, null);
+});
+
+test("order statuses", () => {
+  assert.equal(S.statusInfo("shipped").label, "Out for delivery");
+  assert.equal(S.statusInfo("cancelled").key, "cancelled");
+  assert.equal(S.statusInfo("bogus"), null);
 });

@@ -1,10 +1,12 @@
 {
   "name": "annies-shoes-world",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Annie's Shoes World — a vanilla JS sneaker retail storefront",
+  "description": "Annie's Shoes World: women's shoes, clothing, handbags and watches, with accounts and WhatsApp ordering and tracking",
+  "engines": { "node": ">=18" },
   "scripts": {
-    "start": "npx --yes serve -l 5173 .",
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
     "test": "node --test"
   }
 }
