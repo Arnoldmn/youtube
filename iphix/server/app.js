@@ -7,6 +7,7 @@ const express = require('express');
 const auth = require('./auth');
 const { createWhatsApp, waLink } = require('./whatsapp');
 const { createMpesa, isSafaricomNumber } = require('./mpesa');
+const brand = require('./brand');
 const { writeReceipt } = require('./receipt');
 const { slugify } = require('./seed');
 const { SECTIONS, PART_LABELS } = require('./catalog');
@@ -282,6 +283,7 @@ function createApp({ db, config, mpesa: mpesaClient }) {
       deliveryFee: config.deliveryFee, freeDeliveryOver: config.freeDeliveryOver, wholesaleMinQty: config.wholesaleMinQty,
       commissionPct: config.commissionPct, referralDiscountPct: config.referralDiscountPct, minPayout: config.minPayout,
       deliveryMethods: DELIVERY_METHODS, paymentMethods: PAYMENT_METHODS, statuses: STATUSES, whatsappApi: wa.enabled,
+      brand: { logo: (brand.mainLogo() || {}).url || null, icon: (brand.appIcon() || {}).url || null },
       mpesa: {
         stkEnabled: mpesa.enabled, sandbox: mpesa.enabled && mpesa.env !== 'production',
         paybill: config.mpesa.paybill, account: config.mpesa.paybillAccount, name: config.mpesa.paybillName,
@@ -988,6 +990,30 @@ function createApp({ db, config, mpesa: mpesaClient }) {
     const name = `${Date.now().toString(36)}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
     fs.writeFileSync(path.join(uploadsDir, name), buf);
     res.status(201).json({ url: `/uploads/${name}` });
+  });
+
+  // ---------- app icon & home-screen manifest ----------
+  const FALLBACK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#e62e04"/><text x="50" y="70" font-size="60" font-family="Arial" font-weight="bold" fill="#fff" text-anchor="middle">i</text></svg>`;
+  app.get('/app-icon', (req, res) => {
+    const icon = brand.appIcon() || brand.mainLogo();
+    res.set('Cache-Control', 'public, max-age=3600');
+    if (icon) return res.type('image/png').sendFile(icon.file);
+    res.type('image/svg+xml').send(FALLBACK_ICON);
+  });
+  app.get('/manifest.webmanifest', (req, res) => {
+    const icon = brand.appIcon() || brand.mainLogo();
+    res.type('application/manifest+json').json({
+      name: config.storeName,
+      short_name: 'IPHIX',
+      description: 'Phone accessories, spare parts and repair services.',
+      start_url: '/',
+      display: 'standalone',
+      background_color: '#ffffff',
+      theme_color: '#e62e04',
+      icons: icon
+        ? [{ src: '/app-icon', sizes: `${icon.width}x${icon.height}`, type: 'image/png', purpose: 'any' }]
+        : [{ src: '/app-icon', sizes: 'any', type: 'image/svg+xml' }],
+    });
   });
 
   // ---------- static front-end ----------

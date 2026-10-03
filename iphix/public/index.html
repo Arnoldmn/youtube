@@ -8,7 +8,12 @@
   <meta name="theme-color" content="#e62e04">
   <meta property="og:title" content="IPHIX COMMUNICATIONS">
   <meta property="og:description" content="Phone accessories, spare parts & repairs. Order online and confirm on WhatsApp.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e62e04'/><text x='50' y='70' font-size='60' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'>i</text></svg>">
+  <!-- App logo: public/img/IPHIX Logo Icon.png (served via /app-icon, with a built-in fallback) -->
+  <link rel="icon" href="/app-icon">
+  <link rel="apple-touch-icon" href="/app-icon">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-title" content="IPHIX">
+  <meta property="og:image" content="/img/IPHIX%20Logo.png">
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -24,6 +29,8 @@
   <header class="header">
     <div class="wrap header-inner">
       <a href="#/" class="logo" aria-label="IPHIX COMMUNICATIONS home">
+        <!-- Main logo: public/img/IPHIX Logo.png. If it's missing, the text logo below shows instead. -->
+        <img class="logo-img" src="/img/IPHIX%20Logo.png" alt="IPHIX COMMUNICATIONS" onerror="this.remove()">
         <span class="logo-mark">i</span>
         <span class="logo-text"><b>IPHIX</b><small>COMMUNICATIONS</small></span>
       </a>
@@ -58,7 +65,7 @@
   <footer class="footer">
     <div class="wrap footer-grid">
       <div>
-        <div class="logo logo-footer"><span class="logo-mark">i</span><span class="logo-text"><b>IPHIX</b><small>COMMUNICATIONS</small></span></div>
+        <div class="logo logo-footer"><img class="logo-img" src="/img/IPHIX%20Logo.png" alt="IPHIX COMMUNICATIONS" loading="lazy" onerror="this.remove()"><span class="logo-mark">i</span><span class="logo-text"><b>IPHIX</b><small>COMMUNICATIONS</small></span></div>
         <p>Phone accessories, spare parts and professional repairs — retail &amp; wholesale.</p>
         <p id="footer-address"></p>
       </div>

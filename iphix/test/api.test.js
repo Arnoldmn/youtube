@@ -234,3 +234,13 @@ test('hero slider: default slides, admin edits and photo uploads', async () => {
   assert.equal((await admin(`/api/admin/slides/${created.data.slide.id}`, { method: 'DELETE' })).status, 200);
   assert.equal((await admin('/api/admin/slides')).data.slides.length, 6);
 });
+
+test('app icon and manifest fall back cleanly when the logo PNGs are not uploaded yet', async () => {
+  const icon = await fetch(`${base}/app-icon`);
+  assert.equal(icon.status, 200);
+  const manifest = await (await fetch(`${base}/manifest.webmanifest`)).json();
+  assert.equal(manifest.short_name, 'IPHIX');
+  assert.equal(manifest.icons[0].src, '/app-icon');
+  const { data } = await client()('/api/config');
+  assert.ok('brand' in data);
+});

@@ -1,5 +1,6 @@
 'use strict';
 const PDFDocument = require('pdfkit');
+const brand = require('./brand');
 
 const RED = '#e62e04';
 const GREY = '#666666';
@@ -14,12 +15,25 @@ function writeReceipt(out, order, config) {
   const right = doc.page.width - 50;
   const width = right - left;
 
-  // Header band
+  // Header band (with the main logo on a white card when public/img/IPHIX Logo.png exists)
   doc.rect(0, 0, doc.page.width, 100).fill(RED);
-  doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(22).text(config.storeName, left, 30);
+  const logo = brand.mainLogo();
+  let textX = left;
+  if (logo) {
+    const boxH = 70;
+    const boxW = Math.min(170, Math.max(70, Math.round((logo.width / logo.height) * (boxH - 12)) + 12));
+    doc.roundedRect(left, 15, boxW, boxH, 8).fill('#ffffff');
+    try {
+      doc.image(logo.file, left + 6, 21, { fit: [boxW - 12, boxH - 12], align: 'center', valign: 'center' });
+      textX = left + boxW + 14;
+    } catch {
+      textX = left; // unreadable image: fall back to text-only header
+    }
+  }
+  doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(textX === left ? 22 : 18).text(config.storeName, textX, 30);
   doc.font('Helvetica').fontSize(10)
-    .text('Phone accessories • Spare parts • Repair services', left, 58)
-    .text(`WhatsApp: +${config.whatsappNumber}${config.storeAddress ? `  •  ${config.storeAddress}` : ''}`, left, 72);
+    .text('Phone accessories • Spare parts • Repair services', textX, 58)
+    .text(`WhatsApp: +${config.whatsappNumber}${config.storeAddress ? `  •  ${config.storeAddress}` : ''}`, textX, 72);
   doc.font('Helvetica-Bold').fontSize(16).text('RECEIPT', left, 36, { width, align: 'right' });
 
   // Order meta
