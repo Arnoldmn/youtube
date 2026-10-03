@@ -1,5 +1,7 @@
 'use strict';
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
 const crypto = require('crypto');
 const express = require('express');
 const auth = require('./auth');
@@ -247,7 +249,9 @@ function createApp({ db, config, mpesa: mpesaClient }) {
   // ---------- middleware ----------
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
-  app.use(express.json({ limit: '200kb', verify: (req, res, buf) => { req.rawBody = buf; } }));
+  const jsonSmall = express.json({ limit: '200kb', verify: (req, res, buf) => { req.rawBody = buf; } });
+  const jsonUpload = express.json({ limit: '8mb' });
+  app.use((req, res, next) => (req.path === '/api/admin/uploads' ? jsonUpload : jsonSmall)(req, res, next));
   app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -264,7 +268,8 @@ function createApp({ db, config, mpesa: mpesaClient }) {
   });
   // Basic CSRF defence: state-changing API calls must be JSON (forms from other sites cannot send that cross-origin).
   app.use('/api', (req, res, next) => {
-    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && !req.path.startsWith('/whatsapp/') && !req.is('application/json')) {
+    // DELETE carries no body and cannot be sent by a cross-site HTML form, so it needs no content-type check.
+    if (['POST', 'PUT', 'PATCH'].includes(req.method) && !req.path.startsWith('/whatsapp/') && !req.is('application/json')) {
       return next(new HttpError(415, 'Expected JSON.'));
     }
     next();
@@ -919,6 +924,70 @@ function createApp({ db, config, mpesa: mpesaClient }) {
       else if (match) wa.sendText(from, `For your privacy we can only share order updates with the phone number used for the order. Track online: ${config.baseUrl}/#/track`);
       else if (/\b(TRACK|STATUS|ORDER)\b/i.test(text)) wa.sendText(from, `We couldn't find an order for this number. Send "TRACK" followed by your order number, e.g. TRACK IPX-260929-AB12.`);
     }
+  });
+
+  // ---------- hero slider ----------
+  const uploadsDir = config.dbFile === ':memory:' ? path.join(os.tmpdir(), 'iphix-uploads') : path.join(path.dirname(config.dbFile), 'uploads');
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  app.use('/uploads', express.static(uploadsDir, { maxAge: '7d', fallthrough: false }));
+
+  const slideView = (s) => ({ id: s.id, title: s.title, subtitle: s.subtitle, ctaLabel: s.cta_label, ctaLink: s.cta_link, image: s.image, sort: s.sort, active: !!s.active });
+
+  function slideInput(body, existing = {}) {
+    const v = (k, d = '') => (body[k] !== undefined ? body[k] : existing[k] !== undefined ? existing[k] : d);
+    const title = str(v('title'), 80);
+    if (title.length < 3) throw bad('Slide title is too short.');
+    const image = str(v('image'), 500);
+    if (!/^(\/(img|uploads)\/[\w./-]+|https:\/\/\S+)$/.test(image)) throw bad('Choose an uploaded photo or an https:// image link.');
+    const link = str(v('ctaLink'), 200);
+    if (link && !/^(#\/|\/|https:\/\/)/.test(link)) throw bad('Button link must start with #/, / or https://');
+    return {
+      title, subtitle: str(v('subtitle'), 200), cta_label: str(v('ctaLabel'), 30), cta_link: link, image,
+      sort: Math.round(Number(v('sort', 0)) || 0), active: v('active', true) === false ? 0 : 1,
+    };
+  }
+
+  app.get('/api/slides', (req, res) => {
+    res.json({ slides: db.all('SELECT * FROM slides WHERE active = 1 ORDER BY sort, id').map(slideView) });
+  });
+  app.get('/api/admin/slides', requireAdmin, (req, res) => {
+    res.json({ slides: db.all('SELECT * FROM slides ORDER BY sort, id').map(slideView) });
+  });
+  app.post('/api/admin/slides', requireAdmin, (req, res) => {
+    const s = slideInput(req.body);
+    if (!req.body.sort && req.body.sort !== 0) s.sort = (db.get('SELECT COALESCE(MAX(sort), -1) AS n FROM slides').n) + 1;
+    const { lastInsertRowid } = db.run('INSERT INTO slides (title, subtitle, cta_label, cta_link, image, sort, active) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      s.title, s.subtitle, s.cta_label, s.cta_link, s.image, s.sort, s.active);
+    res.status(201).json({ slide: slideView(db.get('SELECT * FROM slides WHERE id = ?', lastInsertRowid)) });
+  });
+  app.put('/api/admin/slides/:id', requireAdmin, (req, res, next) => {
+    const cur = db.get('SELECT * FROM slides WHERE id = ?', Number(req.params.id));
+    if (!cur) return next(new HttpError(404, 'Slide not found.'));
+    const s = slideInput(req.body, slideView(cur));
+    db.run('UPDATE slides SET title = ?, subtitle = ?, cta_label = ?, cta_link = ?, image = ?, sort = ?, active = ? WHERE id = ?',
+      s.title, s.subtitle, s.cta_label, s.cta_link, s.image, s.sort, s.active, cur.id);
+    res.json({ slide: slideView(db.get('SELECT * FROM slides WHERE id = ?', cur.id)) });
+  });
+  app.delete('/api/admin/slides/:id', requireAdmin, (req, res, next) => {
+    const { changes } = db.run('DELETE FROM slides WHERE id = ?', Number(req.params.id));
+    if (!changes) return next(new HttpError(404, 'Slide not found.'));
+    res.json({ ok: true });
+  });
+
+  // Admin photo upload (JSON with a base64 data URL; no extra dependencies). Only real JPEG/PNG/WebP files are accepted.
+  app.post('/api/admin/uploads', requireAdmin, (req, res) => {
+    const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(req.body.data || ''));
+    if (!m) throw bad('Upload a JPG, PNG or WebP photo.');
+    const buf = Buffer.from(m[2], 'base64');
+    if (buf.length > 5 * 1024 * 1024) throw bad('Photo is too large (max 5 MB).');
+    const isJpeg = buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+    const isPng = buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    const isWebp = buf.subarray(0, 4).toString() === 'RIFF' && buf.subarray(8, 12).toString() === 'WEBP';
+    const ext = isJpeg ? 'jpg' : isPng ? 'png' : isWebp ? 'webp' : null;
+    if (!ext) throw bad('That file is not a valid JPG, PNG or WebP image.');
+    const name = `${Date.now().toString(36)}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
+    fs.writeFileSync(path.join(uploadsDir, name), buf);
+    res.status(201).json({ url: `/uploads/${name}` });
   });
 
   // ---------- static front-end ----------

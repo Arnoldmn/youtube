@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7f1d1d"/><stop offset="1" stop-color="#e62e04"/></linearGradient>
+ <radialGradient id="glow" cx="0.75" cy="0.45" r="0.5"><stop offset="0" stop-color="#fecaca" stop-opacity=".28"/><stop offset="1" stop-color="#fecaca" stop-opacity="0"/></radialGradient>
+ <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#000" flood-opacity=".38"/></filter>
+ <filter id="sh2" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000" flood-opacity=".3"/></filter>
+ <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a2d33"/><stop offset=".5" stop-color="#4b5059"/><stop offset="1" stop-color="#1c1e22"/></linearGradient>
+ <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient>
+ 
+</defs>
+<rect width="1200" height="480" fill="url(#bg)"/>
+<rect width="1200" height="480" fill="url(#glow)"/>
+<g opacity=".07" fill="none" stroke="#fff" stroke-width="2"><circle cx="1080" cy="-40" r="260"/><circle cx="1080" cy="-40" r="340"/><circle cx="160" cy="520" r="200"/></g>
+<g transform="rotate(-6 860.0 265.0)" filter="url(#sh)">
+ <rect x="757" y="67" width="206" height="396" rx="35.0" fill="#be123c"/>
+ <rect x="760" y="70" width="200" height="390" rx="32.0" fill="#0b0c0e"/>
+ <rect x="962" y="155.8" width="4" height="39.0" rx="2" fill="#555"/>
+ <rect x="962" y="210.4" width="4" height="62.4" rx="2" fill="#555"/>
+ <clipPath id="c76070"><rect x="770" y="80" width="180" height="370" rx="26.0"/></clipPath>
+ <g clip-path="url(#c76070)"><rect x="770" y="80" width="180" height="370" fill="#000"/><rect x="770" y="80" width="180" height="370" fill="#0f766e"/>
+<path d="M770,283.5 C824.0,209.5 878.0,357.5 950,265.0 L950,450 L770,450 Z" fill="#14b8a6" opacity=".9"/>
+<path d="M770,346.4 C833.0,283.5 896.0,413.0 950,339.0 L950,450 L770,450 Z" fill="#facc15" opacity=".85"/>
+<text x="860.0" y="176.2" font-family="Arial,Helvetica,sans-serif" font-size="36.0" font-weight="300" fill="#fff" text-anchor="middle">10:09</text>
+<text x="860.0" y="198.4" font-family="Arial,Helvetica,sans-serif" font-size="9.9" fill="#fff" fill-opacity=".85" text-anchor="middle">Saturday, 3 October</text>
+  <rect x="770" y="80" width="180" height="370" fill="url(#shine)"/></g>
+ <rect x="834.0" y="86" width="52.0" height="15.0" rx="7.5" fill="#000"/>
+</g><g transform="rotate(8 1000 250)" filter="url(#sh2)">
+ <rect x="910" y="40" width="200" height="390" rx="34" fill="#e0f2fe" fill-opacity=".28" stroke="#fff" stroke-opacity=".9" stroke-width="3"/>
+ <path d="M930,60 L1000,60 L930,190 Z" fill="#fff" fill-opacity=".35"/><path d="M1020,60 L1050,60 L940,280 L930,260 Z" fill="#fff" fill-opacity=".25"/>
+ <rect x="975" y="54" width="70" height="14" rx="7" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2"/>
+ <text x="1010" y="380" font-family="Arial,Helvetica,sans-serif" font-size="40" font-weight="900" fill="#fff" text-anchor="middle">9H</text>
+ <text x="1010" y="404" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">TEMPERED GLASS</text>
+</g>
+<g filter="url(#sh)"><rect x="640" y="250" width="110" height="110" rx="26" fill="#1f2937"/>
+ <circle cx="672" cy="282" r="20" fill="#0f172a" stroke="#94a3b8" stroke-width="4"/><circle cx="718" cy="282" r="20" fill="#0f172a" stroke="#94a3b8" stroke-width="4"/><circle cx="672" cy="328" r="20" fill="#0f172a" stroke="#94a3b8" stroke-width="4"/><circle cx="718" cy="328" r="7" fill="#fde68a"/></g><g filter="url(#sh2)"><rect x="600" y="24" width="398.82" height="35.7" rx="17.85" fill="#fff"/><text x="799.41" y="47.8" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700" fill="#111" text-anchor="middle">Cases · Tempered · UV · Privacy glass</text></g>
+</svg>

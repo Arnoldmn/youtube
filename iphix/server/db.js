@@ -130,6 +130,16 @@ CREATE TABLE IF NOT EXISTS mpesa_payments (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_mpesa_order ON mpesa_payments(order_id);
+CREATE TABLE IF NOT EXISTS slides (
+  id INTEGER PRIMARY KEY,
+  title TEXT NOT NULL,
+  subtitle TEXT NOT NULL DEFAULT '',
+  cta_label TEXT NOT NULL DEFAULT '',
+  cta_link TEXT NOT NULL DEFAULT '',
+  image TEXT NOT NULL,
+  sort INTEGER NOT NULL DEFAULT 0,
+  active INTEGER NOT NULL DEFAULT 1
+);
 `;
 
 // Columns added after the first release; applied to existing databases on start-up.

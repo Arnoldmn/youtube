@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#431407"/><stop offset="1" stop-color="#ea580c"/></linearGradient>
+ <radialGradient id="glow" cx="0.75" cy="0.45" r="0.5"><stop offset="0" stop-color="#fdba74" stop-opacity=".28"/><stop offset="1" stop-color="#fdba74" stop-opacity="0"/></radialGradient>
+ <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#000" flood-opacity=".38"/></filter>
+ <filter id="sh2" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000" flood-opacity=".3"/></filter>
+ <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a2d33"/><stop offset=".5" stop-color="#4b5059"/><stop offset="1" stop-color="#1c1e22"/></linearGradient>
+ <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient>
+ 
+</defs>
+<rect width="1200" height="480" fill="url(#bg)"/>
+<rect width="1200" height="480" fill="url(#glow)"/>
+<g opacity=".07" fill="none" stroke="#fff" stroke-width="2"><circle cx="1080" cy="-40" r="260"/><circle cx="1080" cy="-40" r="340"/><circle cx="160" cy="520" r="200"/></g>
+<g filter="url(#sh)">
+ <path d="M640,380 C700,470 860,450 880,360 C900,270 760,250 790,180 C815,120 930,150 960,230" fill="none" stroke="#111827" stroke-width="18" stroke-linecap="round"/>
+ <path d="M640,380 C700,470 860,450 880,360 C900,270 760,250 790,180 C815,120 930,150 960,230" fill="none" stroke="#fb923c" stroke-width="4" stroke-dasharray="6 10" stroke-linecap="round" opacity=".7"/>
+ <g transform="rotate(-35 630 370)"><rect x="606" y="340" width="48" height="60" rx="10" fill="#e5e7eb"/><rect x="618" y="300" width="24" height="44" rx="6" fill="#9ca3af"/><rect x="623" y="306" width="14" height="30" rx="3" fill="#4b5563"/></g>
+</g>
+<g filter="url(#sh)">
+ <rect x="930" y="170" width="190" height="190" rx="34" fill="#f9fafb"/>
+ <rect x="930" y="170" width="190" height="190" rx="34" fill="url(#shine)"/>
+ <rect x="990" y="245" width="70" height="20" rx="10" fill="#111827"/>
+ <rect x="1003" y="251" width="44" height="8" rx="4" fill="#374151"/>
+ <text x="1025" y="315" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="800" fill="#ea580c" text-anchor="middle">33W</text>
+ <text x="1025" y="215" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="700" fill="#9ca3af" text-anchor="middle">FAST CHARGE</text>
+ <rect x="975" y="360" width="16" height="44" rx="4" fill="#d1d5db"/><rect x="1059" y="360" width="16" height="44" rx="4" fill="#d1d5db"/>
+</g>
+<g filter="url(#sh)" transform="translate(-30 50) rotate(-8 760 110)">
+ <rect x="690" y="40" width="200" height="120" rx="22" fill="#111827"/>
+ <rect x="690" y="40" width="200" height="120" rx="22" fill="url(#shine)"/>
+ <text x="790" y="95" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="800" fill="#fff" text-anchor="middle">20,000mAh</text>
+ <g fill="#22c55e"><circle cx="760" cy="125" r="6"/><circle cx="780" cy="125" r="6"/><circle cx="800" cy="125" r="6"/></g><circle cx="820" cy="125" r="6" fill="#374151"/>
+</g><g filter="url(#sh2)"><rect x="670" y="24" width="329.79999999999995" height="35.7" rx="17.85" fill="#fff"/><text x="834.9" y="47.8" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700" fill="#111" text-anchor="middle">Type-C · Lightning · Micro-USB</text></g>
+</svg>

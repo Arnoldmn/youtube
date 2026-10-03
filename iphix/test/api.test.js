@@ -196,3 +196,41 @@ test('IPHIX Paybill 529914 / Account 638804 is built into payments by default', 
   assert.equal(data.mpesa.account, '638804');
   assert.match(data.mpesa.name, /Kingdom Bank/);
 });
+
+test('hero slider: default slides, admin edits and photo uploads', async () => {
+  const pub = await client()('/api/slides');
+  assert.equal(pub.data.slides.length, 6);
+  assert.ok(pub.data.slides.every((s) => s.image.startsWith('/img/slides/')));
+
+  const shopper = client();
+  await shopper('/api/auth/register', { method: 'POST', body: { name: 'Sam Slider', email: 'sam@example.com', phone: '0766000006', password: 'password123' } });
+  assert.equal((await shopper('/api/admin/slides', { method: 'POST', body: { title: 'Hack', image: '/img/x.svg' } })).status, 403);
+
+  const admin = client();
+  await admin('/api/auth/login', { method: 'POST', body: { identifier: 'admin@test.local', password: 'AdminPass123' } });
+
+  // Upload: real PNG accepted, fake "image" rejected.
+  const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const up = await admin('/api/admin/uploads', { method: 'POST', body: { data: `data:image/png;base64,${png}` } });
+  assert.equal(up.status, 201);
+  assert.match(up.data.url, /^\/uploads\/[\w-]+\.png$/);
+  const served = await fetch(base + up.data.url);
+  assert.equal(served.status, 200);
+  assert.equal(served.headers.get('content-type'), 'image/png');
+  const fake = Buffer.from('<script>alert(1)</script>').toString('base64');
+  assert.equal((await admin('/api/admin/uploads', { method: 'POST', body: { data: `data:image/png;base64,${fake}` } })).status, 400);
+
+  // Unsafe links/images are refused.
+  assert.equal((await admin('/api/admin/slides', { method: 'POST', body: { title: 'Bad link', image: up.data.url, ctaLink: 'javascript:alert(1)' } })).status, 400);
+  assert.equal((await admin('/api/admin/slides', { method: 'POST', body: { title: 'Bad image', image: 'http://insecure.example/x.jpg' } })).status, 400);
+
+  const created = await admin('/api/admin/slides', { method: 'POST', body: { title: 'New iPhone 15 screens', subtitle: 'In stock now', ctaLabel: 'Shop', ctaLink: '#/brand/iphone', image: up.data.url } });
+  assert.equal(created.status, 201);
+  assert.equal(created.data.slide.sort, 6);
+  assert.equal((await client()('/api/slides')).data.slides.length, 7);
+
+  await admin(`/api/admin/slides/${created.data.slide.id}`, { method: 'PUT', body: { active: false } });
+  assert.equal((await client()('/api/slides')).data.slides.length, 6);
+  assert.equal((await admin(`/api/admin/slides/${created.data.slide.id}`, { method: 'DELETE' })).status, 200);
+  assert.equal((await admin('/api/admin/slides')).data.slides.length, 6);
+});

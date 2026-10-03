@@ -79,6 +79,16 @@ function brandSpares(brandSlug, brandName, parts, models, rand) {
   return out;
 }
 
+// Default hero slides (artwork in public/img/slides). Admins can replace them with real photos.
+const DEFAULT_SLIDES = [
+  { title: 'Cracked screen? Fixed in 1 hour', subtitle: 'Original-quality LCD & OLED screens for Samsung, iPhone, Tecno, Infinix, Redmi, Oppo & Vivo — fitted while you wait.', ctaLabel: 'Shop screens', ctaLink: '#/category/lcd-screens', image: '/img/slides/screens.svg' },
+  { title: 'Batteries that last all day', subtitle: 'High-capacity replacement batteries for every major brand, with a 3-month warranty and free health check.', ctaLabel: 'Shop batteries', ctaLink: '#/category/batteries', image: '/img/slides/batteries.svg' },
+  { title: 'Fast chargers, cables & power banks', subtitle: 'Type-C, Lightning and Micro-USB. 20W–45W fast chargers and power banks up to 30,000mAh.', ctaLabel: 'Shop charging', ctaLink: '#/category/fast-chargers', image: '/img/slides/chargers.svg' },
+  { title: 'Protect your phone', subtitle: 'Shockproof cases, 9H tempered glass, UV full-glue and privacy glass, camera lens protectors.', ctaLabel: 'Shop protection', ctaLink: '#/category/tempered-glass', image: '/img/slides/protection.svg' },
+  { title: 'Earbuds, speakers & smart watches', subtitle: 'Wireless earbuds, Bluetooth speakers, smart watches and bands at wholesale-friendly prices.', ctaLabel: 'Shop audio', ctaLink: '#/category/earphones-earbuds', image: '/img/slides/audio.svg' },
+  { title: 'Professional phone repairs', subtitle: 'Diagnostics, charging ports, back glass, cameras, speakers, software & water damage — by skilled technicians.', ctaLabel: 'Book a repair', ctaLink: '#/shop/services', image: '/img/slides/repair.svg' },
+];
+
 function seed(db, config) {
   const already = db.get('SELECT COUNT(*) AS n FROM categories').n;
   if (!already) {
@@ -133,6 +143,11 @@ function seed(db, config) {
     });
   }
 
+  if (!db.get('SELECT COUNT(*) AS n FROM slides').n) {
+    const insSlide = db.prepare('INSERT INTO slides (title, subtitle, cta_label, cta_link, image, sort) VALUES (?, ?, ?, ?, ?, ?)');
+    DEFAULT_SLIDES.forEach((s, i) => insSlide.run(s.title, s.subtitle, s.ctaLabel, s.ctaLink, s.image, i));
+  }
+
   if (!db.get("SELECT id FROM users WHERE role = 'admin' LIMIT 1")) {
     db.run(
       `INSERT INTO users (name, email, phone, password_hash, role, referral_code) VALUES (?, ?, ?, ?, 'admin', ?)`,
@@ -141,4 +156,4 @@ function seed(db, config) {
   }
 }
 
-module.exports = { seed, slugify };
+module.exports = { seed, slugify, DEFAULT_SLIDES };

@@ -194,12 +194,13 @@
 
   // ---------- pages: home ----------
   async function pageHome() {
-    const [deals, spares, accessories, services, fresh] = await Promise.all([
+    const [deals, spares, accessories, services, fresh, { slides }] = await Promise.all([
       api('/api/products?deal=1&limit=12'),
       api('/api/products?section=spares&limit=12'),
       api('/api/products?section=accessories&limit=12'),
       api('/api/products?section=services&limit=9'),
       api('/api/products?new=1&sort=newest&limit=12'),
+      api('/api/slides'),
     ]);
     const c = state.config;
     const focus = ['lcd-screens', 'oled-amoled-screens', 'phone-covers-cases', 'tempered-glass', 'uv-full-glue-glass', 'chargers-adapters', 'usb-cables', 'batteries', 'charging-ports', 'earphones-earbuds', 'power-banks', 'back-covers'];
@@ -209,33 +210,19 @@
 
     view.innerHTML = `
       <section class="hero">
-        <div class="card side-cats" style="padding:10px 0">
-          ${state.catalog.sections.map((s) => `<h4>${s.icon} ${esc(s.name)}</h4>
-            ${s.categories.slice(0, s.key === 'services' ? 4 : 5).map((cat) => `<a href="#/category/${cat.slug}"><span>${cat.icon}</span>${esc(cat.name.split(/[—/(]/)[0])}</a>`).join('')}
-            <a href="#/shop/${s.key}" style="color:var(--red);font-weight:600">All ${esc(s.name.toLowerCase())} →</a>`).join('')}
-        </div>
-        <div class="banner">
-          <span class="deco">📱</span>
-          <h1>Phone accessories, spares &amp; repairs — all in one place</h1>
-          <p>Screens, batteries, charging ports, covers, tempered glass, chargers and more for Samsung, iPhone, Tecno, Infinix, Redmi, Oppo &amp; Vivo. Retail and wholesale.</p>
-          <div class="btn-row">
-            <a class="btn" href="#/shop/spares">Shop spare parts</a>
-            <a class="btn btn-wa" target="_blank" rel="noopener" href="${waLink(c.whatsappNumber, `Hi ${c.storeName}, I'm looking for a part for my phone: `)}">Ask on WhatsApp</a>
-          </div>
-        </div>
+        ${sliderHtml(slides)}
         <div class="hero-side">
           <div class="card welcome">
             <h3>${u ? `Welcome back, ${esc(u.name.split(' ')[0])} 👋` : 'Welcome to IPHIX 👋'}</h3>
             <div class="perk"><span>🚚</span><span>Free delivery over ${money(c.freeDeliveryOver)}</span></div>
             <div class="perk"><span>📦</span><span>Wholesale price on ${c.wholesaleMinQty}+ pcs</span></div>
-            <div class="perk"><span>💬</span><span>Order &amp; track on WhatsApp</span></div>
+            <div class="perk"><span>📱</span><span>Pay with M-Pesa, track on WhatsApp</span></div>
             <div class="btn-row" style="margin-top:8px">${u ? '<a class="btn btn-sm" href="#/account">My orders</a>' : '<a class="btn btn-sm" href="#/register">Join free</a><a class="btn btn-sm btn-outline" href="#/login">Sign in</a>'}</div>
           </div>
-          <div class="card earn-card">
+          <a class="card earn-card" href="#/earn">
             <h3>💰 Earn ${c.commissionPct}% sharing IPHIX</h3>
-            <p class="small" style="margin:0 0 10px">Share your link on WhatsApp, Facebook &amp; TikTok. Get paid on M-Pesa for every order you bring.</p>
-            <a class="btn btn-sm" href="#/earn">Start earning</a>
-          </div>
+            <p class="small">Share your link — get paid on M-Pesa for every order you bring. <b>Start earning →</b></p>
+          </a>
         </div>
       </section>
 
@@ -258,6 +245,67 @@
       ${productGrid(services.products)}
       ${fresh.products.length ? `<div class="section-head"><h2>🆕 New arrivals</h2><a href="#/new">See all →</a></div>${productGrid(fresh.products)}` : ''}`;
     startCountdown();
+    startSlider();
+  }
+
+  // ---------- hero slider ----------
+  function sliderHtml(slides) {
+    if (!slides.length) return '<div class="slider slider-empty"></div>';
+    return `<div class="slider" id="slider" role="region" aria-roledescription="carousel" aria-label="Featured">
+      <div class="slides" id="slides">${slides.map((sl, i) => `
+        <a class="slide" href="${esc(sl.ctaLink || '#/')}" aria-roledescription="slide" aria-label="${i + 1} of ${slides.length}: ${esc(sl.title)}">
+          <img src="${esc(sl.image)}" alt="${esc(sl.title)}" ${i ? 'loading="lazy"' : 'fetchpriority="high"'} draggable="false">
+          <div class="slide-text">
+            <h2>${esc(sl.title)}</h2>
+            ${sl.subtitle ? `<p>${esc(sl.subtitle)}</p>` : ''}
+            ${sl.ctaLabel ? `<span class="btn btn-sm slide-cta">${esc(sl.ctaLabel)} →</span>` : ''}
+          </div>
+        </a>`).join('')}</div>
+      ${slides.length > 1 ? `
+        <button class="sl-arrow sl-prev" type="button" aria-label="Previous slide">‹</button>
+        <button class="sl-arrow sl-next" type="button" aria-label="Next slide">›</button>
+        <div class="sl-dots">${slides.map((sl, i) => `<button type="button" aria-label="Go to slide ${i + 1}" data-dot="${i}"></button>`).join('')}</div>` : ''}
+    </div>`;
+  }
+
+  let sliderTimer;
+  function startSlider() {
+    clearInterval(sliderTimer);
+    const root = $('#slider');
+    const track = $('#slides');
+    if (!root || !track) return;
+    const count = track.children.length;
+    if (count < 2) return;
+    let index = 0;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const go = (i) => {
+      index = (i + count) % count;
+      track.style.transform = `translateX(${-index * 100}%)`;
+      $$('[data-dot]', root).forEach((d, k) => d.classList.toggle('on', k === index));
+      Array.from(track.children).forEach((el, k) => el.setAttribute('aria-hidden', String(k !== index)));
+    };
+    const play = () => { clearInterval(sliderTimer); if (!reduce) sliderTimer = setInterval(() => { if (!document.body.contains(root)) return clearInterval(sliderTimer); go(index + 1); }, 5000); };
+    const pause = () => clearInterval(sliderTimer);
+    $('.sl-prev', root).addEventListener('click', () => { go(index - 1); play(); });
+    $('.sl-next', root).addEventListener('click', () => { go(index + 1); play(); });
+    $$('[data-dot]', root).forEach((d) => d.addEventListener('click', () => { go(Number(d.dataset.dot)); play(); }));
+    root.addEventListener('mouseenter', pause);
+    root.addEventListener('mouseleave', play);
+    root.addEventListener('focusin', pause);
+    root.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') go(index - 1); if (e.key === 'ArrowRight') go(index + 1); });
+    // Touch swipe; a real swipe should not also follow the slide's link.
+    let startX = null;
+    let swiped = false;
+    root.addEventListener('pointerdown', (e) => { startX = e.clientX; swiped = false; });
+    root.addEventListener('pointerup', (e) => {
+      if (startX === null) return;
+      const dx = e.clientX - startX;
+      startX = null;
+      if (Math.abs(dx) > 40) { swiped = true; go(index + (dx < 0 ? 1 : -1)); play(); }
+    });
+    track.addEventListener('click', (e) => { if (swiped) { e.preventDefault(); swiped = false; } });
+    go(0);
+    play();
   }
 
   let countdownTimer;
@@ -736,6 +784,7 @@
 
     const poll = () => {
       clearInterval(payPoll);
+    clearInterval(sliderTimer);
       const started = Date.now();
       payPoll = setInterval(async () => {
         if (!document.body.contains(panel)) return clearInterval(payPoll);
@@ -1082,7 +1131,7 @@
     if (!requireLogin('/admin')) return;
     if (state.user.role !== 'admin') throw Object.assign(new Error('This page is for store admins.'), { status: 403 });
     const tab = query.get('tab') || 'orders';
-    const tabs = [['orders', '📦 Orders'], ['products', '🏷️ Products'], ['promoters', '💰 Promoters'], ['payouts', '💸 Payouts']];
+    const tabs = [['orders', '📦 Orders'], ['products', '🏷️ Products'], ['slider', '🖼️ Slider'], ['promoters', '💰 Promoters'], ['payouts', '💸 Payouts']];
     const st = await api('/api/admin/stats');
     view.innerHTML = `
       <h1>⚙️ Store admin</h1>
@@ -1103,6 +1152,7 @@
     const body = $('#admin-body');
     if (tab === 'orders') await adminOrders(body, query);
     else if (tab === 'products') await adminProducts(body, query);
+    else if (tab === 'slider') await adminSlider(body);
     else if (tab === 'promoters') await adminPromoters(body);
     else await adminPayouts(body);
   }
@@ -1184,7 +1234,8 @@
             <div class="field"><label>Brand (for spares)</label><select name="brand"><option value="">— none —</option>${brands}</select></div>
             <div class="field"><label>Part type (for brand pages)</label><select name="part"><option value="">— none —</option>${parts}</select></div>
             <div class="field"><label>Phone model</label><input name="model" type="text" placeholder="Galaxy A15"></div>
-            <div class="field"><label>Image URL (optional)</label><input name="image" type="url" placeholder="https://…"></div>
+            <div class="field"><label>Photo (optional)</label>
+              <div class="copy-row"><input name="image" type="text" placeholder="Upload a photo or paste an https:// link"><label class="btn btn-sm btn-ghost upload-btn">📷 Upload<input type="file" accept="image/*" data-upload-into="image" hidden></label></div></div>
             <div class="field"><label>Price</label><input name="price" type="number" min="0" required></div>
             <div class="field"><label>Was price (for deals)</label><input name="comparePrice" type="number" min="0"></div>
             <div class="field"><label>Wholesale price (${state.config.wholesaleMinQty}+ pcs)</label><input name="wholesalePrice" type="number" min="0"></div>
@@ -1196,8 +1247,9 @@
           <div style="margin-top:12px"><button class="btn" type="submit">Save product</button></div>
         </form></details>
       <form class="inline-form" id="product-search" style="margin-bottom:12px"><div class="field"><input name="q" type="search" value="${esc(q)}" placeholder="Search products"></div><button class="btn btn-sm" type="submit">Search</button></form>
-      <div class="tbl-wrap"><table class="tbl admin-edit"><thead><tr><th>Product</th><th>Price</th><th>Was</th><th>Wholesale</th><th>Stock</th><th>Deal</th><th>Live</th><th></th></tr></thead><tbody>
+      <div class="tbl-wrap"><table class="tbl admin-edit"><thead><tr><th>Photo</th><th>Product</th><th>Price</th><th>Was</th><th>Wholesale</th><th>Stock</th><th>Deal</th><th>Live</th><th></th></tr></thead><tbody>
         ${products.map((p) => `<tr data-id="${p.id}">
+          <td><label class="thumb-upload" title="Upload a photo"><img src="${esc(p.image)}" alt="" loading="lazy"><span>📷</span><input type="file" accept="image/*" data-product-photo="${p.id}" hidden></label></td>
           <td><a href="#/p/${esc(p.slug)}">${esc(p.name)}</a><div class="muted small">${esc(p.category.name)}</div></td>
           <td><input name="price" type="number" min="0" value="${p.price}"></td>
           <td><input name="comparePrice" type="number" min="0" value="${p.comparePrice ?? ''}"></td>
@@ -1219,6 +1271,17 @@
         toast('Product saved ✔', 'ok');
       } catch (err) { toast(err.message, 'error'); }
     }));
+    bindUploads(body);
+    $$('[data-product-photo]', body).forEach((input) => input.addEventListener('change', async () => {
+      const file = input.files[0];
+      if (!file) return;
+      try {
+        const url = await uploadPhoto(file);
+        await api(`/api/admin/products/${input.dataset.productPhoto}`, { method: 'PUT', body: { image: url } });
+        input.closest('label').querySelector('img').src = url;
+        toast('Photo updated ✔', 'ok');
+      } catch (err) { toast(err.message, 'error'); }
+    }));
     $('#new-product').addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = new FormData(e.target);
@@ -1232,6 +1295,95 @@
         location.hash = `#/p/${product.slug}`;
       } catch (err) { $('#np-msg').innerHTML = `<div class="form-error">${esc(err.message)}</div>`; }
     });
+  }
+
+  /** Resizes a photo in the browser (max 1600px, JPEG) and uploads it. Returns the stored URL. */
+  async function uploadPhoto(file) {
+    if (!/^image\//.test(file.type)) throw new Error('Please choose an image file.');
+    const dataUrl = await new Promise((resolve, reject) => {
+      const img = new Image();
+      const src = URL.createObjectURL(file);
+      img.onload = () => {
+        const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(src);
+        resolve(canvas.toDataURL('image/jpeg', 0.86));
+      };
+      img.onerror = () => { URL.revokeObjectURL(src); reject(new Error('Could not read that image.')); };
+      img.src = src;
+    });
+    toast('Uploading photo…');
+    const { url } = await api('/api/admin/uploads', { method: 'POST', body: { data: dataUrl } });
+    return url;
+  }
+
+  // <input type=file data-upload-into="fieldName"> uploads and writes the URL into that field of the same form.
+  function bindUploads(root) {
+    $$('[data-upload-into]', root).forEach((input) => input.addEventListener('change', async () => {
+      const file = input.files[0];
+      if (!file) return;
+      try {
+        const url = await uploadPhoto(file);
+        const form = input.closest('form');
+        form.elements[input.dataset.uploadInto].value = url;
+        const preview = $('[data-preview]', form);
+        if (preview) preview.src = url;
+        toast('Photo uploaded ✔ — remember to save', 'ok');
+      } catch (err) { toast(err.message, 'error'); }
+    }));
+  }
+
+  async function adminSlider(body) {
+    const { slides } = await api('/api/admin/slides');
+    const slideForm = (sl) => `
+      <form class="slide-form card" data-slide="${sl ? sl.id : 'new'}">
+        <img class="slide-thumb" data-preview src="${esc(sl ? sl.image : '/img/slides/screens.svg')}" alt="">
+        <div class="slide-fields">
+          <div class="grid-2">
+            <div class="field"><label>Headline</label><input name="title" type="text" maxlength="80" required value="${esc(sl ? sl.title : '')}" placeholder="e.g. iPhone screens in stock"></div>
+            <div class="field"><label>Button text</label><input name="ctaLabel" type="text" maxlength="30" value="${esc(sl ? sl.ctaLabel : 'Shop now')}"></div>
+          </div>
+          <div class="field"><label>Short description</label><input name="subtitle" type="text" maxlength="200" value="${esc(sl ? sl.subtitle : '')}"></div>
+          <div class="grid-2">
+            <div class="field"><label>Button link</label><input name="ctaLink" type="text" value="${esc(sl ? sl.ctaLink : '#/deals')}" placeholder="#/category/lcd-screens"></div>
+            <div class="field"><label>Photo</label><div class="copy-row"><input name="image" type="text" required value="${esc(sl ? sl.image : '/img/slides/screens.svg')}"><label class="btn btn-sm btn-ghost upload-btn">📷 Upload<input type="file" accept="image/*" data-upload-into="image" hidden></label></div>
+              <div class="hint">Wide photos work best (about 1600×600). The left side holds the text.</div></div>
+          </div>
+          <div class="btn-row" style="align-items:center">
+            ${sl ? `<label style="display:inline-flex;gap:6px;margin:0"><input type="checkbox" name="active" ${sl.active ? 'checked' : ''}> Show on homepage</label>
+              <label style="display:inline-flex;gap:6px;align-items:center;margin:0">Order <input name="sort" type="number" value="${sl.sort}" style="width:70px;padding:5px 8px"></label>` : ''}
+            <button class="btn btn-sm" type="submit">${sl ? 'Save slide' : '➕ Add slide'}</button>
+            ${sl ? `<button class="btn btn-sm btn-ghost" type="button" data-delete-slide="${sl.id}">Delete</button>` : ''}
+          </div>
+        </div>
+      </form>`;
+    body.innerHTML = `
+      <p class="muted">These slides rotate at the top of the homepage. Upload real photos of your screens, accessories and repair desk for the best results.</p>
+      <details style="margin-bottom:14px"><summary class="btn btn-sm" style="list-style:none;display:inline-flex">➕ New slide</summary>${slideForm(null)}</details>
+      ${slides.map(slideForm).join('') || '<p class="muted">No slides yet.</p>'}`;
+    bindUploads(body);
+    $$('.slide-form', body).forEach((f) => f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(f));
+      const id = f.dataset.slide;
+      if (id !== 'new') data.active = f.elements.active.checked;
+      try {
+        await api(id === 'new' ? '/api/admin/slides' : `/api/admin/slides/${id}`, { method: id === 'new' ? 'POST' : 'PUT', body: data });
+        toast('Slide saved ✔', 'ok');
+        adminSlider(body);
+      } catch (err) { toast(err.message, 'error'); }
+    }));
+    $$('[data-delete-slide]', body).forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm('Delete this slide?')) return;
+      try {
+        await api(`/api/admin/slides/${b.dataset.deleteSlide}`, { method: 'DELETE' });
+        toast('Slide deleted', 'ok');
+        adminSlider(body);
+      } catch (err) { toast(err.message, 'error'); }
+    }));
   }
 
   async function adminPromoters(body) {
