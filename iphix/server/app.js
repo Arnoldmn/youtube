@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const express = require('express');
 const auth = require('./auth');
 const { createWhatsApp, waLink } = require('./whatsapp');
+const { createMpesa, isSafaricomNumber } = require('./mpesa');
 const { writeReceipt } = require('./receipt');
 const { slugify } = require('./seed');
 const { SECTIONS, PART_LABELS } = require('./catalog');
@@ -21,9 +22,16 @@ const STATUSES = {
 const FINAL_STATUSES = new Set(['delivered', 'cancelled']);
 const DELIVERY_METHODS = { delivery: 'Home / office delivery', pickup: 'Pickup at shop' };
 const PAYMENT_METHODS = {
-  mpesa: 'M-Pesa (we confirm on WhatsApp)',
+  mpesa: 'M-Pesa',
   cod: 'Cash / M-Pesa on delivery',
   shop: 'Pay at the shop',
+};
+
+const PAYMENT_STATUSES = {
+  unpaid: 'Not paid',
+  verifying: 'Verifying M-Pesa payment',
+  partial: 'Partly paid',
+  paid: 'Paid',
 };
 
 class HttpError extends Error {
@@ -38,9 +46,11 @@ function str(v, max = 200) {
   return String(v ?? '').trim().slice(0, max);
 }
 
-function createApp({ db, config }) {
+function createApp({ db, config, mpesa: mpesaClient }) {
   const app = express();
   const wa = createWhatsApp(config);
+  const mpesa = mpesaClient || createMpesa(config);
+  const stkLimiter = auth.rateLimiter({ windowMs: 20e3, max: 1 });
   const loginLimiter = auth.rateLimiter({ windowMs: 15 * 60e3, max: 10 });
   const writeLimiter = auth.rateLimiter({ windowMs: 60e3, max: 30 });
   const money = (n) => `${config.currency} ${Number(n).toLocaleString('en-US')}`;
@@ -105,8 +115,23 @@ function createApp({ db, config }) {
       ...orderLinks(o.code),
       whatsappUrl: waLink(config.whatsappNumber, orderMessage(o, items)),
       trackWhatsappUrl: waLink(config.whatsappNumber, `TRACK ${o.code}`),
-      canCancel: o.status === 'pending',
+      paymentStatus: o.payment_status, paymentStatusLabel: PAYMENT_STATUSES[o.payment_status] || o.payment_status,
+      amountPaid: o.amount_paid, balance: Math.max(0, o.total - o.amount_paid), mpesaReceipt: o.mpesa_receipt,
+      canPay: o.status !== 'cancelled' && o.payment_status !== 'paid',
+      canCancel: o.status === 'pending' && o.amount_paid === 0 && o.payment_status === 'unpaid',
     };
+  }
+
+  function paybillText() {
+    const m = config.mpesa;
+    return m.paybill ? `Paybill ${m.paybill}${m.paybillAccount ? `, Account ${m.paybillAccount}` : ''}` : '';
+  }
+
+  function paymentLine(o) {
+    if (o.payment_status === 'paid') return `Payment: ${PAYMENT_METHODS[o.payment_method]} — PAID ✅${o.mpesa_receipt ? ` (M-Pesa ${o.mpesa_receipt})` : ''}`;
+    if (o.payment_status === 'verifying') return `Payment: M-Pesa code ${o.mpesa_receipt} sent — please verify`;
+    if (o.payment_status === 'partial') return `Payment: ${money(o.amount_paid)} paid, ${money(o.total - o.amount_paid)} remaining`;
+    return `Payment: ${PAYMENT_METHODS[o.payment_method]} — not paid yet`;
   }
 
   function orderMessage(o, items) {
@@ -117,7 +142,8 @@ function createApp({ db, config }) {
       `Name: ${o.customer_name}`,
       `Phone: +${o.phone}`,
       `Delivery: ${DELIVERY_METHODS[o.delivery_method]}${o.delivery_method === 'delivery' ? ` — ${o.address}, ${o.city}` : ''}`,
-      `Payment: ${PAYMENT_METHODS[o.payment_method]}`,
+      paymentLine(o),
+      ...(o.payment_method === 'mpesa' && o.payment_status !== 'paid' && paybillText() ? [`Pay via M-Pesa: ${paybillText()}`] : []),
       '',
       '*Items*',
       ...items.map((i, n) => `${n + 1}. ${i.name} × ${i.qty} — ${money(i.line_total)}`),
@@ -142,6 +168,7 @@ function createApp({ db, config }) {
       ...(note ? [note] : []),
       '',
       `Total: ${money(o.total)}`,
+      paymentLine(o),
       `📦 Track: ${trackUrl}`,
       `📄 Receipt: ${receiptUrl}`,
       '',
@@ -250,6 +277,10 @@ function createApp({ db, config }) {
       deliveryFee: config.deliveryFee, freeDeliveryOver: config.freeDeliveryOver, wholesaleMinQty: config.wholesaleMinQty,
       commissionPct: config.commissionPct, referralDiscountPct: config.referralDiscountPct, minPayout: config.minPayout,
       deliveryMethods: DELIVERY_METHODS, paymentMethods: PAYMENT_METHODS, statuses: STATUSES, whatsappApi: wa.enabled,
+      mpesa: {
+        stkEnabled: mpesa.enabled, sandbox: mpesa.enabled && mpesa.env !== 'production',
+        paybill: config.mpesa.paybill, account: config.mpesa.paybillAccount, name: config.mpesa.paybillName,
+      },
     });
   });
 
@@ -464,6 +495,7 @@ function createApp({ db, config }) {
     res.json({
       orders: rows.map((o) => ({
         code: o.code, status: o.status, statusLabel: STATUSES[o.status], total: o.total, createdAt: o.created_at,
+        paymentStatus: o.payment_status, paymentStatusLabel: PAYMENT_STATUSES[o.payment_status],
         itemCount: db.get('SELECT COALESCE(SUM(qty), 0) AS n FROM order_items WHERE order_id = ?', o.id).n,
       })),
     });
@@ -487,6 +519,7 @@ function createApp({ db, config }) {
     const o = db.get('SELECT * FROM orders WHERE code = ? AND user_id = ?', str(req.params.code, 30).toUpperCase(), req.user.id);
     if (!o) return next(new HttpError(404, 'Order not found.'));
     if (o.status !== 'pending') return next(bad('This order is already being processed. Please contact us on WhatsApp to change it.'));
+    if (o.amount_paid > 0 || o.payment_status !== 'unpaid') return next(bad('This order has a payment. Please contact us on WhatsApp to cancel and get a refund.'));
     const updated = changeStatus(o, 'cancelled', 'Cancelled by customer');
     res.json({ order: orderView(updated) });
   });
@@ -513,6 +546,138 @@ function createApp({ db, config }) {
       return db.get('SELECT * FROM orders WHERE id = ?', o.id);
     });
   }
+
+  // ---------- M-Pesa payments ----------
+  const mpesaCallbackToken = auth.hmac(config.sessionSecret, 'mpesa-callback').replace(/[^A-Za-z0-9]/g, '').slice(0, 32);
+  const mpesaCallbackUrl = config.mpesa.callbackUrl || `${config.baseUrl}/api/mpesa/callback/${mpesaCallbackToken}`;
+
+  function findViewableOrder(req) {
+    const o = db.get('SELECT * FROM orders WHERE code = ?', str(req.params.code, 30).toUpperCase());
+    if (!o || !canViewOrder(req, o)) throw new HttpError(404, 'Order not found.');
+    return o;
+  }
+
+  function paymentView(p) {
+    return p && {
+      status: p.status, amount: p.amount, phone: p.phone, receipt: p.receipt, resultDesc: p.result_desc,
+      createdAt: p.created_at, checkoutRequestId: p.checkout_request_id,
+    };
+  }
+
+  /** Records a Safaricom result for an STK push. Safe to call more than once for the same payment. */
+  function applyMpesaResult(payment, { resultCode, resultDesc = '', receipt = '', amount }) {
+    let confirmOrder = null;
+    db.tx(() => {
+      const cur = db.get('SELECT * FROM mpesa_payments WHERE id = ?', payment.id);
+      if (cur.status === 'paid') {
+        // A late callback can add the receipt number to a payment we already confirmed via query.
+        if (receipt && !cur.receipt) {
+          db.run("UPDATE mpesa_payments SET receipt = ?, updated_at = datetime('now') WHERE id = ?", receipt, cur.id);
+          db.run("UPDATE orders SET mpesa_receipt = ? WHERE id = ? AND mpesa_receipt = ''", receipt, cur.order_id);
+        }
+        return;
+      }
+      if (resultCode === 0) {
+        const paid = Math.round(Number(amount) || cur.amount);
+        db.run(
+          "UPDATE mpesa_payments SET status = 'paid', result_code = 0, result_desc = ?, receipt = ?, amount = ?, updated_at = datetime('now') WHERE id = ?",
+          resultDesc, receipt, paid, cur.id,
+        );
+        const o = db.get('SELECT * FROM orders WHERE id = ?', cur.order_id);
+        const amountPaid = o.amount_paid + paid;
+        const status = amountPaid >= o.total ? 'paid' : 'partial';
+        db.run("UPDATE orders SET amount_paid = ?, payment_status = ?, mpesa_receipt = ?, updated_at = datetime('now') WHERE id = ?",
+          amountPaid, status, receipt || o.mpesa_receipt, o.id);
+        if (status === 'paid' && o.status === 'pending') confirmOrder = o;
+      } else if (cur.status === 'pending') {
+        const status = resultCode === 1032 ? 'cancelled' : 'failed';
+        db.run("UPDATE mpesa_payments SET status = ?, result_code = ?, result_desc = ?, updated_at = datetime('now') WHERE id = ?",
+          status, resultCode, resultDesc, cur.id);
+      }
+    });
+    const order = db.get('SELECT * FROM orders WHERE id = ?', payment.order_id);
+    if (confirmOrder) {
+      const updated = changeStatus(order, 'confirmed', `Payment received via M-Pesa${order.mpesa_receipt ? ` (${order.mpesa_receipt})` : ''}`);
+      wa.sendText(updated.phone, statusMessage(updated, '✅ Payment received — thank you!'));
+      wa.sendText(config.whatsappNumber, `💰 M-Pesa payment received for ${updated.code}: ${money(updated.amount_paid)}${updated.mpesa_receipt ? ` (${updated.mpesa_receipt})` : ''}`);
+    }
+  }
+
+  app.post('/api/orders/:code/mpesa/stk', limitWrites, async (req, res) => {
+    const o = findViewableOrder(req);
+    if (!mpesa.enabled) throw bad(`M-Pesa prompts are not available right now.${paybillText() ? ` Please pay via ${paybillText()}.` : ''}`);
+    if (o.status === 'cancelled') throw bad('This order was cancelled.');
+    if (o.payment_status === 'paid') throw bad('This order is already paid. Thank you!');
+    const phone = normalizePhone(req.body.phone || o.phone);
+    if (!isSafaricomNumber(phone)) throw bad('Enter a Safaricom M-Pesa number, e.g. 0712 345 678.');
+    if (!stkLimiter(o.code)) throw new HttpError(429, 'A payment prompt was just sent. Check your phone, or wait 20 seconds to resend.');
+    const amount = o.total - o.amount_paid;
+    let result;
+    try {
+      result = await mpesa.stkPush({
+        phone, amount,
+        accountReference: config.mpesa.accountReference || o.code.replace(/^IPX-/, '').replace(/-/g, ''),
+        description: `Order ${o.code.slice(-4)}`,
+        callbackUrl: mpesaCallbackUrl,
+      });
+    } catch (err) {
+      console.error('[mpesa] stk push failed:', err.message);
+      throw new HttpError(502, `Could not send the M-Pesa prompt: ${err.message}`);
+    }
+    db.run('INSERT INTO mpesa_payments (order_id, checkout_request_id, merchant_request_id, phone, amount) VALUES (?, ?, ?, ?, ?)',
+      o.id, result.checkoutRequestId, result.merchantRequestId || '', phone, amount);
+    res.status(201).json({
+      payment: paymentView(db.get('SELECT * FROM mpesa_payments WHERE checkout_request_id = ?', result.checkoutRequestId)),
+      message: result.customerMessage || 'Check your phone and enter your M-Pesa PIN to pay.',
+    });
+  });
+
+  app.get('/api/orders/:code/payment', async (req, res) => {
+    const o = findViewableOrder(req);
+    let p = db.get('SELECT * FROM mpesa_payments WHERE order_id = ? ORDER BY id DESC LIMIT 1', o.id);
+    // If Safaricom's callback is slow or lost, ask Daraja directly (at most every 10 seconds).
+    const ageMs = p ? Date.now() - Date.parse(`${p.created_at.replace(' ', 'T')}Z`) : 0;
+    if (p && p.status === 'pending' && mpesa.enabled && ageMs > 15e3 && Date.now() - p.last_query_at > 10e3) {
+      db.run('UPDATE mpesa_payments SET last_query_at = ? WHERE id = ?', Date.now(), p.id);
+      try {
+        const r = await mpesa.stkQuery(p.checkout_request_id);
+        if (r) applyMpesaResult(p, r);
+        else if (ageMs > 3 * 60e3) applyMpesaResult(p, { resultCode: 1037, resultDesc: 'No response from the phone. Please try again.' });
+      } catch (err) {
+        console.error('[mpesa] stk query failed:', err.message);
+      }
+      p = db.get('SELECT * FROM mpesa_payments WHERE id = ?', p.id);
+    }
+    res.json({ payment: paymentView(p) || null, order: orderView(db.get('SELECT * FROM orders WHERE id = ?', o.id)) });
+  });
+
+  // Safaricom posts the STK result here. The secret path stops anyone else from faking results.
+  app.post('/api/mpesa/callback/:token', (req, res) => {
+    if (!auth.safeEqual(req.params.token, mpesaCallbackToken)) return res.sendStatus(404);
+    const cb = req.body && req.body.Body && req.body.Body.stkCallback;
+    const p = cb && db.get('SELECT * FROM mpesa_payments WHERE checkout_request_id = ?', String(cb.CheckoutRequestID || ''));
+    if (p) {
+      const meta = Object.fromEntries(((cb.CallbackMetadata && cb.CallbackMetadata.Item) || []).map((i) => [i.Name, i.Value]));
+      applyMpesaResult(p, {
+        resultCode: Number(cb.ResultCode), resultDesc: String(cb.ResultDesc || ''),
+        receipt: String(meta.MpesaReceiptNumber || ''), amount: meta.Amount,
+      });
+    }
+    res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
+  });
+
+  // Customer paid manually via Paybill and enters the M-Pesa confirmation code for us to verify.
+  app.post('/api/orders/:code/mpesa/confirm', limitWrites, (req, res) => {
+    const o = findViewableOrder(req);
+    const receipt = str(req.body.receipt, 20).toUpperCase().replace(/\s/g, '');
+    if (!/^[A-Z0-9]{10}$/.test(receipt)) throw bad('Enter the 10-character M-Pesa confirmation code, e.g. TJ4AB1CD2E.');
+    if (o.status === 'cancelled') throw bad('This order was cancelled.');
+    if (o.payment_status === 'paid') throw bad('This order is already paid. Thank you!');
+    if (db.get('SELECT 1 FROM orders WHERE mpesa_receipt = ? AND id != ?', receipt, o.id)) throw bad('That M-Pesa code has already been used for another order.');
+    db.run("UPDATE orders SET payment_status = 'verifying', mpesa_receipt = ?, updated_at = datetime('now') WHERE id = ?", receipt, o.id);
+    wa.sendText(config.whatsappNumber, `🔎 Please verify M-Pesa payment for ${o.code}: code ${receipt}, amount due ${money(o.total - o.amount_paid)}.`);
+    res.json({ order: orderView(db.get('SELECT * FROM orders WHERE id = ?', o.id)) });
+  });
 
   // ---------- affiliate programme ----------
   function affiliateBalance(userId) {
@@ -615,6 +780,25 @@ function createApp({ db, config }) {
     const message = statusMessage(updated, note);
     wa.sendText(updated.phone, message);
     res.json({ order: orderView(updated), customerWhatsappUrl: waLink(updated.phone, message), autoSent: wa.enabled });
+  });
+
+  app.put('/api/admin/orders/:code/payment', requireAdmin, (req, res, next) => {
+    let o = db.get('SELECT * FROM orders WHERE code = ?', str(req.params.code, 30).toUpperCase());
+    if (!o) return next(new HttpError(404, 'Order not found.'));
+    const receipt = str(req.body.receipt, 20).toUpperCase();
+    if (req.body.status === 'paid') {
+      db.run("UPDATE orders SET payment_status = 'paid', amount_paid = total, mpesa_receipt = ?, updated_at = datetime('now') WHERE id = ?", receipt || o.mpesa_receipt, o.id);
+      o = db.get('SELECT * FROM orders WHERE id = ?', o.id);
+      if (o.status === 'pending') o = changeStatus(o, 'confirmed', `Payment confirmed${o.mpesa_receipt ? ` (M-Pesa ${o.mpesa_receipt})` : ''}`);
+    } else if (req.body.status === 'unpaid') {
+      db.run("UPDATE orders SET payment_status = 'unpaid', amount_paid = 0, mpesa_receipt = '', updated_at = datetime('now') WHERE id = ?", o.id);
+      o = db.get('SELECT * FROM orders WHERE id = ?', o.id);
+    } else {
+      return next(bad('Status must be paid or unpaid.'));
+    }
+    const message = statusMessage(o, o.payment_status === 'paid' ? '✅ Payment received — thank you!' : 'We could not confirm your M-Pesa payment. Please check the code or contact us.');
+    wa.sendText(o.phone, message);
+    res.json({ order: orderView(o), customerWhatsappUrl: waLink(o.phone, message) });
   });
 
   const PRODUCT_FIELDS = ['name', 'description', 'category', 'brand', 'model', 'part', 'price', 'comparePrice', 'wholesalePrice', 'stock', 'isNew', 'isDeal', 'image', 'active'];
@@ -752,4 +936,4 @@ function createApp({ db, config }) {
   return app;
 }
 
-module.exports = { createApp, STATUSES };
+module.exports = { createApp, STATUSES, PAYMENT_STATUSES };

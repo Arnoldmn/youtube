@@ -11,5 +11,8 @@ const app = createApp({ db, config });
 app.listen(config.port, () => {
   console.log(`${config.storeName} running on ${config.baseUrl} (port ${config.port})`);
   if (!process.env.SESSION_SECRET) console.warn('SESSION_SECRET is not set — using a generated development secret.');
+  if (config.mpesa.consumerKey && !config.baseUrl.startsWith('https://') && !config.mpesa.callbackUrl) {
+    console.warn('M-Pesa: BASE_URL is not https — Safaricom cannot reach the payment callback. Status will rely on polling Daraja.');
+  }
   if (!process.env.ADMIN_PASSWORD) console.warn(`Default admin login: ${config.admin.email} / ${config.admin.password} — change it!`);
 });

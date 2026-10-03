@@ -114,7 +114,37 @@ CREATE TABLE IF NOT EXISTS payouts (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS mpesa_payments (
+  id INTEGER PRIMARY KEY,
+  order_id INTEGER NOT NULL REFERENCES orders(id),
+  checkout_request_id TEXT NOT NULL UNIQUE,
+  merchant_request_id TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  result_code INTEGER,
+  result_desc TEXT NOT NULL DEFAULT '',
+  receipt TEXT NOT NULL DEFAULT '',
+  last_query_at INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_mpesa_order ON mpesa_payments(order_id);
 `;
+
+// Columns added after the first release; applied to existing databases on start-up.
+const MIGRATIONS = [
+  ['orders', 'payment_status', "TEXT NOT NULL DEFAULT 'unpaid'"],
+  ['orders', 'amount_paid', 'INTEGER NOT NULL DEFAULT 0'],
+  ['orders', 'mpesa_receipt', "TEXT NOT NULL DEFAULT ''"],
+];
+
+function migrate(db) {
+  for (const [table, column, type] of MIGRATIONS) {
+    const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+    if (!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+  }
+}
 
 function openDb(file) {
   if (file !== ':memory:') fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -122,6 +152,7 @@ function openDb(file) {
   db.exec('PRAGMA foreign_keys = ON;');
   if (file !== ':memory:') db.exec('PRAGMA journal_mode = WAL;');
   db.exec(SCHEMA);
+  migrate(db);
 
   db.tx = (fn) => {
     db.exec('BEGIN');

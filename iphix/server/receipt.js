@@ -30,6 +30,7 @@ function writeReceipt(out, order, config) {
     ['Date', new Date(`${order.createdAt.replace(' ', 'T')}Z`).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi' })],
     ['Status', order.statusLabel],
     ['Payment', order.paymentLabel],
+    ['Payment status', `${order.paymentStatusLabel}${order.mpesaReceipt ? ` (M-Pesa ${order.mpesaReceipt})` : ''}`],
     ['Delivery', order.deliveryLabel],
   ];
   const billTo = [
@@ -98,6 +99,22 @@ function writeReceipt(out, order, config) {
     .text('TOTAL', right - 240, y + 8, { width: 140, align: 'right' })
     .text(money(order.total), right - 96, y + 8, { width: 92, align: 'right' });
   y += 46;
+
+  if (order.amountPaid > 0 && order.paymentStatus !== 'paid') {
+    doc.fillColor('#000000').font('Helvetica').fontSize(10)
+      .text(`Paid: ${money(order.amountPaid)}   Balance due: ${money(order.balance)}`, left, y, { width, align: 'right' });
+    y = doc.y + 10;
+  }
+  if (order.paymentStatus === 'paid') {
+    doc.fillColor('#0a7d3b').font('Helvetica-Bold').fontSize(14).text('PAID', left, y - 36, { width: 120 });
+  } else if (order.status !== 'cancelled' && config.mpesa.paybill) {
+    doc.rect(left, y, width, 46).fill('#eaf7ef');
+    doc.fillColor('#0a7d3b').font('Helvetica-Bold').fontSize(11)
+      .text(`Pay with M-Pesa: Paybill ${config.mpesa.paybill}${config.mpesa.paybillAccount ? `  •  Account ${config.mpesa.paybillAccount}` : ''}`, left + 12, y + 9, { width: width - 24 });
+    doc.font('Helvetica').fontSize(9)
+      .text(`${config.mpesa.paybillName ? `${config.mpesa.paybillName}. ` : ''}Amount: ${money(order.balance)}. Send us the M-Pesa confirmation code with order ${order.code}.`, left + 12, y + 26, { width: width - 24 });
+    y += 60;
+  }
 
   if (order.notes) {
     doc.fillColor('#000000').font('Helvetica-Bold').fontSize(10).text('Notes', left, y);

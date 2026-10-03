@@ -350,3 +350,18 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
   .cart-line .right { grid-column: 2; flex-direction: row; justify-content: space-between; align-items: center; }
   .mega { display: none !important; }
 }
+
+/* M-Pesa payments */
+.btn-mpesa { background: #2fa84f; color: #fff; }
+.btn-mpesa:hover { background: #27913f; color: #fff; }
+.pay-card { margin-top: 14px; border: 2px solid #2fa84f; }
+.pay-card.paid { border-color: #c8ecd4; background: #f1fbf5; }
+.pay-card .inline-form { margin: 10px 0; }
+.paybill { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
+.paybill summary { cursor: pointer; font-weight: 700; color: #0a7d3b; }
+.paybill-steps { padding-left: 20px; margin: 10px 0; }
+.paybill-steps li { padding: 3px 0; }
+.big-num { font-size: 18px; letter-spacing: .5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.pay-wait { display: flex; align-items: center; gap: 10px; }
+.spinner { width: 16px; height: 16px; border: 2.5px solid #bfe8cd; border-top-color: #0a7d3b; border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }

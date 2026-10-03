@@ -3,7 +3,7 @@
 An AliExpress-style shop for **phone accessories, phone spare parts and repair services**:
 
 - **Login and accounts:** register, sign in with email or phone, edit your profile, change your password (this signs you out on your other devices) and sign out.
-- **Checkout:** cart → checkout → the order is saved → **the order is sent to the shop's WhatsApp** with a ready-made message → a **PDF receipt** is created.
+- **Checkout:** cart → checkout → the order is saved → **M-Pesa payment** (a PIN prompt on the customer's phone, or Paybill 529914 / Account 638804 with the code checked by an admin) → **the order is sent to the shop's WhatsApp** with a ready-made message → a **PDF receipt** is created, showing whether the order is paid.
 - **Order tracking:** a step-by-step timeline on the website, a **"Track on WhatsApp"** button, and WhatsApp status messages each time the admin changes an order. With the optional Cloud API, these messages go out automatically and the shop replies to "TRACK" messages by itself.
 - **Promoter (affiliate) programme:** each customer gets a personal referral link. Promoters earn a percentage of every sale they bring in, and their friends get a discount on their first order. Promoters ask for payouts to M-Pesa and an admin pays them.
 - **Admin panel:** orders and status updates (with a WhatsApp message to the customer), products (prices, stock, deals, wholesale price), promoters and payouts.
@@ -36,6 +36,46 @@ The admin account is created on first start from `ADMIN_EMAIL` / `ADMIN_PASSWORD
 5. When an order is marked **Delivered**, the promoter's commission becomes available to withdraw. Cancelling an order puts the stock back and cancels the commission.
 
 Customers can also track an order without signing in at `#/track`, using the order number and phone number, or by sending `TRACK IPX-…` on WhatsApp.
+
+## M-Pesa payments
+
+There are two ways to pay, and both can be on at the same time.
+
+**1. Lipa na M-Pesa Paybill (works with no API keys).** The checkout page, the order page and the PDF receipt show:
+
+```
+MPESA_PAYBILL=529914
+MPESA_PAYBILL_ACCOUNT=638804
+MPESA_PAYBILL_NAME=KB M-Collection General Merchants (Kingdom Bank)
+```
+
+The customer pays from their phone and types the M-Pesa confirmation code from the SMS into the order page. The order shows **Verifying M-Pesa payment**. In **Admin → Orders** you compare the code with your Kingdom Bank / M-Collection statement and click **Confirm paid**. The order then moves to *Confirmed* and you can send the customer a WhatsApp message. The same code can't be used on two orders.
+
+**2. STK push (a pop-up on the customer's phone asking for their M-Pesa PIN).** Once Daraja credentials are set, the site sends this prompt to the customer's phone straight after they place an order. If no prompt arrives, they can press **Send M-Pesa prompt** to resend it.
+- Safaricom reports the result to `/api/mpesa/callback/<secret>`. The order is then marked **Paid**, moves to *Confirmed*, and the M-Pesa receipt number is saved and printed on the PDF receipt.
+- If Safaricom's report is late or never arrives, the order page asks Safaricom directly for the result instead.
+- A cancelled or failed prompt leaves the order unpaid, and the customer can try again.
+
+```
+MPESA_ENV=production            # or sandbox for testing
+MPESA_CONSUMER_KEY=...          # from your Daraja app
+MPESA_CONSUMER_SECRET=...
+MPESA_SHORTCODE=...             # the Paybill/Till these credentials were issued for
+MPESA_PASSKEY=...               # Lipa na M-Pesa Online passkey from Safaricom
+MPESA_TRANSACTION_TYPE=CustomerPayBillOnline   # or CustomerBuyGoodsOnline for a Till (+ MPESA_PARTY_B=till no.)
+MPESA_ACCOUNT_REFERENCE=        # empty = order number; or a fixed account such as 638804
+```
+
+`BASE_URL` must be a public **https** address, otherwise Safaricom cannot send payment results to your site.
+
+> **Important about Paybill 529914.** 529914 is **Kingdom Bank's** collection Paybill. Many merchants share it, and each has their own account number. STK prompts for a shortcode only work with Daraja credentials and a passkey issued **for that shortcode**, and for 529914 those belong to Kingdom Bank. To get prompts on your phone, pick one of these:
+> - **Ask Kingdom Bank** whether KB M-Collection offers STK push or API access for your account (638804). If they give you a consumer key, secret and passkey, put them in the settings above with `MPESA_ACCOUNT_REFERENCE=638804`.
+> - **Get your own Paybill or Till from Safaricom** (via the M-Pesa for Business portal), then go live on the Daraja portal (https://developer.safaricom.co.ke). You can keep settling into your Kingdom Bank account.
+> - **Use a payment aggregator that offers STK push** (for example Pesapal, IntaSend or Kopo Kopo). This needs a small adapter in `server/mpesa.js`.
+>
+> Until one of these is in place, the Paybill flow above works, and every order and receipt carries the correct 529914 / 638804 details.
+
+To test STK push for free, create an app on the Daraja portal and use `MPESA_ENV=sandbox`, `MPESA_SHORTCODE=174379` and the sandbox passkey shown on the portal. The site shows a "test mode" notice in sandbox.
 
 ## WhatsApp setup
 
@@ -80,6 +120,7 @@ iphix/
     seed.js       – loads the starter catalogue and the admin account
     receipt.js    – PDF receipt
     whatsapp.js   – wa.me links and the Cloud API client
+    mpesa.js      – Safaricom Daraja client (STK push + status query)
     auth.js       – password hashing, signed session cookies, rate limiting
     db.js         – SQLite schema
   public/         – storefront (index.html, css/, js/app.js)
@@ -89,6 +130,5 @@ iphix/
 
 ## Next steps
 
-- **M-Pesa STK Push (Daraja API):** payment prompts on the customer's phone, with orders confirmed automatically.
 - **Password reset** by WhatsApp or email code. For now, customers are pointed to WhatsApp support.
 - **Product photo uploads.** Today you paste image URLs.

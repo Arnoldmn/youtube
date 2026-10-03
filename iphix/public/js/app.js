@@ -549,7 +549,7 @@
           </div>
           <div class="card" style="margin-top:14px">
             <h3>Payment</h3>
-            ${Object.entries(c.paymentMethods).map(([k, label], i) => `<label class="choice"><input type="radio" name="paymentMethod" value="${k}" ${(saved.paymentMethod || 'mpesa') === k || (!saved.paymentMethod && i === 0) ? 'checked' : ''}><span>${esc(label)}</span></label>`).join('')}
+            ${Object.entries(c.paymentMethods).map(([k, label], i) => `<label class="choice"><input type="radio" name="paymentMethod" value="${k}" ${(saved.paymentMethod || 'mpesa') === k || (!saved.paymentMethod && i === 0) ? 'checked' : ''}><span>${esc(label)}${k === 'mpesa' ? `<small>${mpesaHint()}</small>` : ''}</span></label>`).join('')}
             <div class="field"><label for="c-notes">Order notes (optional)</label><textarea id="c-notes" name="notes" rows="2" placeholder="Phone model, colour, preferred delivery time…"></textarea></div>
           </div>
         </div>
@@ -605,7 +605,18 @@
         });
         state.cart = [];
         saveCart();
-        location.hash = `#/order-success/${order.code}`;
+        let stk = '';
+        if (details.paymentMethod === 'mpesa' && c.mpesa.stkEnabled) {
+          btn.textContent = 'Sending M-Pesa prompt…';
+          try {
+            await api(`/api/orders/${encodeURIComponent(order.code)}/mpesa/stk`, { method: 'POST', body: { phone: details.phone } });
+            stk = '?stk=sent';
+          } catch (stkErr) {
+            state.flash = stkErr.message;
+            stk = '?stk=failed';
+          }
+        }
+        location.hash = `#/order-success/${order.code}${stk}`;
       } catch (err) {
         $('#checkout-error').innerHTML = `<div class="form-error">${esc(err.message)}</div>`;
         btn.disabled = false;
@@ -616,21 +627,154 @@
   }
 
   // ---------- pages: orders & tracking ----------
-  async function pageOrderSuccess([, code]) {
+  async function pageOrderSuccess([, code], query) {
     const { order } = await api(`/api/orders/${encodeURIComponent(code)}`);
+    const needsPayment = showPayPanel(order) && order.canPay;
     view.innerHTML = `
       <div class="card success-hero">
-        <div class="big">🎉</div>
-        <h1>Order placed — thank you!</h1>
+        <div class="big">${order.paymentStatus === 'paid' ? '✅' : '🎉'}</div>
+        <h1>${order.paymentStatus === 'paid' ? 'Paid — thank you!' : 'Order placed — thank you!'}</h1>
         <p>Your order number is <span class="order-code">${esc(order.code)}</span></p>
-        <p><b>Last step:</b> send the order to us on WhatsApp so we can confirm availability and payment.</p>
+        <p>${needsPayment ? '<b>Next:</b> complete your M-Pesa payment below, then send the order to us on WhatsApp.'
+          : `<b>Last step:</b> send the order to us on WhatsApp so we can ${order.paymentStatus === 'paid' ? 'start preparing it' : 'confirm availability and payment'}.`}</p>
         <div class="btn-row" style="justify-content:center;margin-top:14px">
           <a class="btn btn-wa" href="${esc(order.whatsappUrl)}" target="_blank" rel="noopener">💬 Send order on WhatsApp</a>
           <a class="btn btn-outline" href="${esc(order.receiptUrl)}&download=1">📄 Download PDF receipt</a>
           <a class="btn btn-ghost" href="#/orders/${esc(order.code)}">📦 Track order</a>
         </div>
       </div>
+      ${showPayPanel(order) ? payPanel(order) : ''}
       ${orderDetails(order)}`;
+    bindPayPanel(order, '', query.get('stk'));
+  }
+
+  // ---------- M-Pesa payment panel ----------
+  function mpesaHint() {
+    const m = state.config.mpesa;
+    if (m.stkEnabled) return 'You get a payment prompt on your phone right after placing the order — just enter your PIN.';
+    if (m.paybill) return `Lipa na M-Pesa Paybill ${esc(m.paybill)}${m.account ? `, Account ${esc(m.account)}` : ''}`;
+    return 'We send payment details on WhatsApp.';
+  }
+
+  const showPayPanel = (order) => order.status !== 'cancelled' && (order.paymentMethod === 'mpesa' || order.paymentStatus !== 'unpaid');
+
+  function paymentPill(order) {
+    const cls = { paid: 'pill-green', verifying: 'pill-amber', partial: 'pill-blue', unpaid: 'pill-grey' }[order.paymentStatus] || 'pill-grey';
+    return `<span class="pill ${cls}">${order.paymentStatus === 'paid' ? '✓ ' : ''}${esc(order.paymentStatusLabel)}</span>`;
+  }
+
+  function payPanel(order) {
+    if (!order.canPay) {
+      return `<div class="card pay-card paid"><h3 style="margin:0">✅ Paid ${money(order.amountPaid)}</h3>
+        ${order.mpesaReceipt ? `<p class="muted small" style="margin:4px 0 0">M-Pesa confirmation: <b>${esc(order.mpesaReceipt)}</b></p>` : ''}</div>`;
+    }
+    const m = state.config.mpesa;
+    const due = order.balance;
+    const copyBtn = (v) => `<button type="button" class="link-btn" data-copy="${esc(v)}">copy</button>`;
+    return `<div class="card pay-card" id="pay-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <h3 style="margin:0">📱 Pay ${money(due)} with M-Pesa</h3>${paymentPill(order)}</div>
+      ${order.paymentStatus === 'verifying' ? `<div class="ref-banner">🔎 We're checking M-Pesa code <b>${esc(order.mpesaReceipt)}</b>. You'll get a WhatsApp message once it's confirmed.</div>` : ''}
+      ${m.stkEnabled ? `
+        <p class="muted small">We send a payment prompt to your phone. Enter your M-Pesa PIN to pay — no need to type the paybill.</p>
+        <form id="stk-form" class="inline-form">
+          <div class="field"><label for="stk-phone">M-Pesa phone number</label><input id="stk-phone" type="tel" value="+${esc(order.phone)}" required></div>
+          <button class="btn btn-mpesa" type="submit" id="stk-btn">Send M-Pesa prompt</button>
+        </form>
+        <div id="pay-status" aria-live="polite"></div>
+        ${m.sandbox ? '<p class="hint">Test mode (Safaricom sandbox) — no real money moves.</p>' : ''}` : ''}
+      ${m.paybill ? `
+        <details class="paybill" ${m.stkEnabled ? '' : 'open'}>
+          <summary>${m.stkEnabled ? 'No prompt? Pay manually with Paybill' : 'How to pay with Lipa na M-Pesa'}</summary>
+          <ol class="paybill-steps">
+            <li>Open <b>M-Pesa</b> → <b>Lipa na M-Pesa</b> → <b>Pay Bill</b></li>
+            <li>Business number: <b class="big-num">${esc(m.paybill)}</b> ${copyBtn(m.paybill)}</li>
+            ${m.account ? `<li>Account number: <b class="big-num">${esc(m.account)}</b> ${copyBtn(m.account)}</li>` : ''}
+            <li>Amount: <b class="big-num">${due}</b> ${copyBtn(String(due))}</li>
+            <li>Enter your PIN and confirm${m.name ? ` — it shows <b>${esc(m.name)}</b>` : ''}.</li>
+            <li>Type the confirmation code from the M-Pesa SMS below.</li>
+          </ol>
+          <form id="code-form" class="inline-form">
+            <div class="field"><label for="mpesa-code">M-Pesa confirmation code</label><input id="mpesa-code" type="text" maxlength="10" autocomplete="off" placeholder="e.g. TJ4AB1CD2E" style="text-transform:uppercase" required></div>
+            <button class="btn btn-sm" type="submit">I've paid</button>
+          </form>
+        </details>` : ''}
+    </div>`;
+  }
+
+  let payPoll;
+  function bindPayPanel(order, t, stkState) {
+    const panel = $('#pay-panel');
+    if (!panel) return;
+    const qs = t ? `?t=${encodeURIComponent(t)}` : '';
+    const base = `/api/orders/${encodeURIComponent(order.code)}`;
+    const status = $('#pay-status');
+    const setStatus = (html) => { if (status) status.innerHTML = html; };
+    $$('[data-copy]', panel).forEach((b) => b.addEventListener('click', () => copyText(b.dataset.copy)));
+
+    const poll = () => {
+      clearInterval(payPoll);
+      const started = Date.now();
+      payPoll = setInterval(async () => {
+        if (!document.body.contains(panel)) return clearInterval(payPoll);
+        try {
+          const r = await api(`${base}/payment${qs}`);
+          if (r.order.paymentStatus === 'paid') {
+            clearInterval(payPoll);
+            toast('✅ Payment received — thank you!', 'ok');
+            route();
+            return;
+          }
+          if (r.payment && r.payment.status !== 'pending') {
+            clearInterval(payPoll);
+            setStatus(`<div class="form-error">${r.payment.status === 'cancelled' ? 'You cancelled the M-Pesa prompt.' : esc(r.payment.resultDesc || 'The payment did not go through.')} You can try again.</div>`);
+            if ($('#stk-btn')) $('#stk-btn').disabled = false;
+          }
+        } catch { /* keep polling */ }
+        if (Date.now() - started > 150e3) {
+          clearInterval(payPoll);
+          setStatus('<div class="form-error">We have not received the payment yet. If you paid, it will update shortly — or send us the M-Pesa code below.</div>');
+          if ($('#stk-btn')) $('#stk-btn').disabled = false;
+        }
+      }, 3000);
+    };
+    const waiting = (phone) => {
+      setStatus(`<div class="ref-banner pay-wait"><span class="spinner"></span> Prompt sent to ${esc(phone)}. Enter your M-Pesa PIN on your phone…</div>`);
+      if ($('#stk-btn')) $('#stk-btn').disabled = true;
+      poll();
+    };
+
+    if (stkState === 'sent') waiting(`+${order.phone}`);
+    if (stkState === 'failed' && state.flash) { setStatus(`<div class="form-error">${esc(state.flash)}</div>`); state.flash = null; }
+
+    const stkForm = $('#stk-form');
+    if (stkForm) {
+      stkForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const phone = $('#stk-phone').value;
+        $('#stk-btn').disabled = true;
+        try {
+          await api(`${base}/mpesa/stk${qs}`, { method: 'POST', body: { phone } });
+          waiting(phone);
+        } catch (err) {
+          setStatus(`<div class="form-error">${esc(err.message)}</div>`);
+          $('#stk-btn').disabled = false;
+        }
+      });
+    }
+    const codeForm = $('#code-form');
+    if (codeForm) {
+      codeForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const receipt = $('#mpesa-code').value;
+        try {
+          await api(`${base}/mpesa/confirm${qs}`, { method: 'POST', body: { receipt } });
+          toast('Thanks! We will confirm your payment shortly.', 'ok');
+          window.open(waLink(state.config.whatsappNumber, `Hi ${state.config.storeName}, I have paid ${money(order.balance)} for order ${order.code}. M-Pesa code: ${receipt.toUpperCase()}`), '_blank', 'noopener');
+          route();
+        } catch (err) { toast(err.message, 'error'); }
+      });
+    }
   }
 
   const DELIVERY_STEPS = ['pending', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered'];
@@ -657,7 +801,7 @@
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
           <h2 style="margin:0">Order <span class="order-code">${esc(order.code)}</span></h2>${statusPill(order.status, order.statusLabel)}</div>
-        <p class="muted small">Placed ${fmtDate(order.createdAt)} · ${esc(order.deliveryLabel)} · ${esc(order.paymentLabel)}</p>
+        <p class="muted small">Placed ${fmtDate(order.createdAt)} · ${esc(order.deliveryLabel)} · ${esc(order.paymentLabel)} ${paymentPill(order)}</p>
         <h3>Tracking</h3>
         ${timeline(order)}
         <div class="btn-row">
@@ -679,7 +823,9 @@
     const t = query.get('t');
     const { order } = await api(`/api/orders/${encodeURIComponent(code)}${t ? `?t=${encodeURIComponent(t)}` : ''}`);
     const owner = Boolean(state.user && !t);
-    view.innerHTML = `<div class="breadcrumbs"><a href="#/">Home</a> › ${owner ? '<a href="#/account">My orders</a>' : '<a href="#/track">Track order</a>'} › ${esc(order.code)}</div>${orderDetails(order, { owner })}`;
+    view.innerHTML = `<div class="breadcrumbs"><a href="#/">Home</a> › ${owner ? '<a href="#/account">My orders</a>' : '<a href="#/track">Track order</a>'} › ${esc(order.code)}</div>
+      ${showPayPanel(order) ? payPanel(order) : ''}${orderDetails(order, { owner })}`;
+    bindPayPanel(order, t);
     const cancel = $('#cancel-order');
     if (cancel) {
       cancel.addEventListener('click', async () => {
@@ -772,8 +918,8 @@
     let body = '';
     if (tab === 'orders') {
       const { orders } = await api('/api/orders');
-      body = orders.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody>
-        ${orders.map((o) => `<tr><td><a style="color:var(--red);font-weight:700" href="#/orders/${esc(o.code)}">${esc(o.code)}</a></td><td>${fmtDate(o.createdAt)}</td><td>${o.itemCount}</td><td>${money(o.total)}</td><td>${statusPill(o.status, o.statusLabel)}</td></tr>`).join('')}
+      body = orders.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th>Payment</th></tr></thead><tbody>
+        ${orders.map((o) => `<tr><td><a style="color:var(--red);font-weight:700" href="#/orders/${esc(o.code)}">${esc(o.code)}</a></td><td>${fmtDate(o.createdAt)}</td><td>${o.itemCount}</td><td>${money(o.total)}</td><td>${statusPill(o.status, o.statusLabel)}</td><td>${paymentPill(o)}</td></tr>`).join('')}
         </tbody></table></div>` : '<div class="empty"><div class="big">📦</div><p>No orders yet.</p><a class="btn" href="#/">Start shopping</a></div>';
     } else if (tab === 'profile') {
       body = `<form id="profile-form" style="max-width:460px"><div id="form-msg"></div>
@@ -957,7 +1103,11 @@
         <td>${esc(o.customerName)}<div class="muted small">+${esc(o.phone)}</div><div class="muted small">${esc(o.deliveryLabel)}${o.deliveryMethod === 'delivery' ? `: ${esc(o.address)}, ${esc(o.city)}` : ''}</div><div class="muted small">${esc(o.paymentLabel)}</div></td>
         <td class="small">${o.items.map((i) => `${esc(i.name)} × ${i.qty}`).join('<br>')}${o.notes ? `<div class="muted">📝 ${esc(o.notes)}</div>` : ''}</td>
         <td><b>${money(o.total)}</b></td>
-        <td>${statusPill(o.status, o.statusLabel)}</td>
+        <td>${statusPill(o.status, o.statusLabel)}<div style="margin-top:6px">${paymentPill(o)}</div>
+          ${o.mpesaReceipt ? `<div class="small">M-Pesa: <b>${esc(o.mpesaReceipt)}</b></div>` : ''}
+          ${o.status !== 'cancelled' ? `<div class="btn-row" style="margin-top:6px">${o.paymentStatus !== 'paid'
+            ? `<button class="btn btn-sm btn-mpesa" data-pay="${esc(o.code)}" data-pay-status="paid">${o.paymentStatus === 'verifying' ? 'Confirm paid' : 'Mark paid'}</button>` : ''}
+            ${o.paymentStatus !== 'unpaid' ? `<button class="btn btn-sm btn-ghost" data-pay="${esc(o.code)}" data-pay-status="unpaid">${o.paymentStatus === 'verifying' ? 'Reject code' : 'Mark unpaid'}</button>` : ''}</div>` : ''}</td>
         <td>${['delivered', 'cancelled'].includes(o.status) ? '' : `<form class="admin-row-form" data-code="${esc(o.code)}">
             <select name="status">${Object.entries(statuses).filter(([k]) => k !== o.status).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
             <input name="note" type="text" placeholder="Note (optional)">
@@ -971,6 +1121,20 @@
       const f = new FormData(e.target);
       location.hash = `#/admin?tab=orders&status=${encodeURIComponent(f.get('status'))}&q=${encodeURIComponent(f.get('q'))}`;
     });
+    $$('[data-pay]', body).forEach((b) => b.addEventListener('click', async () => {
+      const paid = b.dataset.payStatus === 'paid';
+      let receipt = '';
+      if (paid) {
+        const entered = prompt('M-Pesa confirmation code (optional — leave as is if already shown):', '');
+        if (entered === null) return;
+        receipt = entered.trim();
+      } else if (!confirm('Mark this order as NOT paid?')) return;
+      try {
+        await api(`/api/admin/orders/${encodeURIComponent(b.dataset.pay)}/payment`, { method: 'PUT', body: { status: b.dataset.payStatus, receipt } });
+        toast(paid ? 'Payment confirmed ✔ — tap "WhatsApp customer" to let them know' : 'Marked as unpaid', 'ok');
+        await pageAdmin(null, query);
+      } catch (err) { toast(err.message, 'error'); }
+    }));
     $$('.admin-row-form', body).forEach((f) => f.addEventListener('submit', async (e) => {
       e.preventDefault();
       const d = Object.fromEntries(new FormData(f));
@@ -1101,6 +1265,7 @@
   let routeSeq = 0;
   async function route() {
     const seq = ++routeSeq;
+    clearInterval(payPoll);
     const raw = location.hash.replace(/^#/, '') || '/';
     const [path, qs] = raw.split('?');
     const query = new URLSearchParams(qs || '');

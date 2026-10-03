@@ -49,6 +49,24 @@ module.exports = {
     email: (env.ADMIN_EMAIL || 'admin@iphix.local').toLowerCase(),
     password: env.ADMIN_PASSWORD || 'ChangeMe123!',
   },
+  mpesa: {
+    // Daraja (Safaricom) credentials for STK push prompts.
+    env: env.MPESA_ENV === 'production' ? 'production' : 'sandbox',
+    consumerKey: env.MPESA_CONSUMER_KEY || '',
+    consumerSecret: env.MPESA_CONSUMER_SECRET || '',
+    shortcode: digits(env.MPESA_SHORTCODE),
+    passkey: env.MPESA_PASSKEY || '',
+    // CustomerPayBillOnline for a Paybill, CustomerBuyGoodsOnline for a Till (then MPESA_PARTY_B = till number).
+    transactionType: env.MPESA_TRANSACTION_TYPE === 'CustomerBuyGoodsOnline' ? 'CustomerBuyGoodsOnline' : 'CustomerPayBillOnline',
+    partyB: digits(env.MPESA_PARTY_B),
+    // Fixed account reference (e.g. a bank collection account). Empty = use the order number.
+    accountReference: (env.MPESA_ACCOUNT_REFERENCE || '').trim(),
+    callbackUrl: env.MPESA_CALLBACK_URL || '',
+    // Manual "Lipa na M-Pesa" Paybill shown to customers (works without any API).
+    paybill: digits(env.MPESA_PAYBILL),
+    paybillAccount: (env.MPESA_PAYBILL_ACCOUNT || '').trim(),
+    paybillName: env.MPESA_PAYBILL_NAME || '',
+  },
   wa: {
     token: env.WA_TOKEN || '',
     phoneNumberId: env.WA_PHONE_NUMBER_ID || '',
