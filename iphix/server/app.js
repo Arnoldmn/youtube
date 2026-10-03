@@ -283,7 +283,10 @@ function createApp({ db, config, mpesa: mpesaClient }) {
       deliveryFee: config.deliveryFee, freeDeliveryOver: config.freeDeliveryOver, wholesaleMinQty: config.wholesaleMinQty,
       commissionPct: config.commissionPct, referralDiscountPct: config.referralDiscountPct, minPayout: config.minPayout,
       deliveryMethods: DELIVERY_METHODS, paymentMethods: PAYMENT_METHODS, statuses: STATUSES, whatsappApi: wa.enabled,
-      brand: { logo: (brand.mainLogo() || {}).url || null, icon: (brand.appIcon() || {}).url || null },
+      brand: {
+        logo: brand.mainLogo() ? `/brand/logo?v=${brand.mainLogo().version}` : null,
+        icon: brand.appIcon() || brand.mainLogo() ? '/brand/icon' : null,
+      },
       mpesa: {
         stkEnabled: mpesa.enabled, sandbox: mpesa.enabled && mpesa.env !== 'production',
         paybill: config.mpesa.paybill, account: config.mpesa.paybillAccount, name: config.mpesa.paybillName,
@@ -994,10 +997,16 @@ function createApp({ db, config, mpesa: mpesaClient }) {
 
   // ---------- app icon & home-screen manifest ----------
   const FALLBACK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#e62e04"/><text x="50" y="70" font-size="60" font-family="Arial" font-weight="bold" fill="#fff" text-anchor="middle">i</text></svg>`;
-  app.get('/app-icon', (req, res) => {
+  // Short cache so a newly added or replaced logo appears quickly.
+  app.get('/brand/logo', (req, res) => {
+    const logo = brand.mainLogo();
+    if (!logo) return res.sendStatus(404);
+    res.set('Cache-Control', 'public, max-age=300').type(logo.type).sendFile(logo.file);
+  });
+  app.get(['/brand/icon', '/app-icon'], (req, res) => {
     const icon = brand.appIcon() || brand.mainLogo();
-    res.set('Cache-Control', 'public, max-age=3600');
-    if (icon) return res.type('image/png').sendFile(icon.file);
+    res.set('Cache-Control', 'public, max-age=300');
+    if (icon) return res.type(icon.type).sendFile(icon.file);
     res.type('image/svg+xml').send(FALLBACK_ICON);
   });
   app.get('/manifest.webmanifest', (req, res) => {
@@ -1010,9 +1019,12 @@ function createApp({ db, config, mpesa: mpesaClient }) {
       display: 'standalone',
       background_color: '#ffffff',
       theme_color: '#e62e04',
-      icons: icon
-        ? [{ src: '/app-icon', sizes: `${icon.width}x${icon.height}`, type: 'image/png', purpose: 'any' }]
-        : [{ src: '/app-icon', sizes: 'any', type: 'image/svg+xml' }],
+      icons: [{
+        src: '/brand/icon',
+        sizes: icon && icon.width ? `${icon.width}x${icon.height}` : 'any',
+        type: icon ? icon.type : 'image/svg+xml',
+        purpose: 'any',
+      }],
     });
   });
 

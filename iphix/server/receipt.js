@@ -17,7 +17,8 @@ function writeReceipt(out, order, config) {
 
   // Header band (with the main logo on a white card when public/img/IPHIX Logo.png exists)
   doc.rect(0, 0, doc.page.width, 100).fill(RED);
-  const logo = brand.mainLogo();
+  const found = brand.mainLogo();
+  const logo = found && ['.png', '.jpg', '.jpeg'].includes(found.ext) ? found : null; // PDFKit embeds PNG/JPEG only
   let textX = left;
   if (logo) {
     const boxH = 70;

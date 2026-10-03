@@ -240,7 +240,7 @@ test('app icon and manifest fall back cleanly when the logo PNGs are not uploade
   assert.equal(icon.status, 200);
   const manifest = await (await fetch(`${base}/manifest.webmanifest`)).json();
   assert.equal(manifest.short_name, 'IPHIX');
-  assert.equal(manifest.icons[0].src, '/app-icon');
+  assert.equal(manifest.icons[0].src, '/brand/icon');
   const { data } = await client()('/api/config');
   assert.ok('brand' in data);
 });
