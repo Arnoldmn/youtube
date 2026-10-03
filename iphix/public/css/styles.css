@@ -300,7 +300,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 .wa-float:hover { background: #1ebe5b; }
 
 .footer { background: #1b1b1b; color: #bbb; padding: 36px 0 18px; font-size: 14px; margin-top: 30px; }
-.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1.4fr; gap: 24px; }
+.footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1.3fr 1.3fr; gap: 24px; }
 .footer h4 { color: #fff; font-size: 14px; }
 .footer a { display: block; padding: 3px 0; }
 .footer a:hover { color: #fff; }
@@ -365,3 +365,22 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 .pay-wait { display: flex; align-items: center; gap: 10px; }
 .spinner { width: 16px; height: 16px; border: 2.5px solid #bfe8cd; border-top-color: #0a7d3b; border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Lipa na M-PESA card (matches the shop's printed Paybill sign) */
+.lipa { border: 2px solid #1f6b2e; border-radius: 12px; overflow: hidden; background: #fff; color: #1b1b1b; max-width: 420px; margin: 10px 0 14px; }
+.lipa-head { background: #1f6b2e; color: #fff; padding: 10px 16px; font-size: 20px; font-weight: 800; letter-spacing: .2px; }
+.lipa-head b { color: #7ed957; }
+.lipa-head small { font-size: 12px; font-weight: 600; margin-left: 6px; opacity: .9; }
+.lipa-body { padding: 12px 16px 14px; }
+.lipa-name { color: #3aa935; font-weight: 800; font-size: 13px; text-transform: uppercase; margin-bottom: 6px; }
+.lipa-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #555; margin-top: 6px; }
+.lipa-num { font-size: 30px; font-weight: 900; color: #1f6b2e; letter-spacing: 2px; line-height: 1.1; }
+.lipa-acc { display: flex; gap: 5px; }
+.lipa-acc span { border: 2px solid #333; border-radius: 6px; width: 30px; text-align: center; font-size: 22px; padding: 2px 0; color: #1b1b1b; }
+.lipa-note { font-size: 12.5px; color: #555; margin: 10px 0 0; }
+.lipa-compact { max-width: 280px; }
+.lipa-compact .lipa-head { font-size: 16px; padding: 8px 12px; }
+.lipa-compact .lipa-body { padding: 8px 12px 10px; }
+.lipa-compact .lipa-num { font-size: 24px; }
+.lipa-compact .lipa-acc span { width: 24px; font-size: 17px; }
+.footer .lipa { margin: 0; }

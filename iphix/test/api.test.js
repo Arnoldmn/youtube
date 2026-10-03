@@ -189,3 +189,10 @@ test('WhatsApp webhook verification', async () => {
   const res = await c('/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=wrong&hub.challenge=123', { raw: true });
   assert.equal(res.status, 403);
 });
+
+test('IPHIX Paybill 529914 / Account 638804 is built into payments by default', async () => {
+  const { data } = await client()('/api/config');
+  assert.equal(data.mpesa.paybill, '529914');
+  assert.equal(data.mpesa.account, '638804');
+  assert.match(data.mpesa.name, /Kingdom Bank/);
+});

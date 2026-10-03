@@ -41,7 +41,7 @@ Customers can also track an order without signing in at `#/track`, using the ord
 
 There are two ways to pay, and both can be on at the same time.
 
-**1. Lipa na M-Pesa Paybill (works with no API keys).** The checkout page, the order page and the PDF receipt show:
+**1. Lipa na M-Pesa Paybill (works with no API keys).** IPHIX's Paybill is built in as the default. It appears as a "Lipa na M-PESA" card at checkout, on the order payment page, in the site footer, on the PDF receipt and in WhatsApp order messages. To change it, set these in `.env`, or set `MPESA_PAYBILL=` (empty) to hide it:
 
 ```
 MPESA_PAYBILL=529914

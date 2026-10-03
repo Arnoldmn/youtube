@@ -62,10 +62,11 @@ module.exports = {
     // Fixed account reference (e.g. a bank collection account). Empty = use the order number.
     accountReference: (env.MPESA_ACCOUNT_REFERENCE || '').trim(),
     callbackUrl: env.MPESA_CALLBACK_URL || '',
-    // Manual "Lipa na M-Pesa" Paybill shown to customers (works without any API).
-    paybill: digits(env.MPESA_PAYBILL),
-    paybillAccount: (env.MPESA_PAYBILL_ACCOUNT || '').trim(),
-    paybillName: env.MPESA_PAYBILL_NAME || '',
+    // IPHIX's Lipa na M-Pesa Paybill (Kingdom Bank KB M-Collection), shown to customers.
+    // Set MPESA_PAYBILL= (empty) in .env to hide it.
+    paybill: digits(env.MPESA_PAYBILL ?? '529914'),
+    paybillAccount: (env.MPESA_PAYBILL_ACCOUNT ?? '638804').trim(),
+    paybillName: env.MPESA_PAYBILL_NAME ?? 'KB M-Collection General Merchants (Kingdom Bank)',
   },
   wa: {
     token: env.WA_TOKEN || '',

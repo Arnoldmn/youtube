@@ -97,7 +97,7 @@ test('timestamp is in Kenyan time', () => {
 
 test('config exposes paybill and STK availability', async () => {
   const { data } = await client()('/api/config');
-  assert.deepEqual(data.mpesa, { stkEnabled: true, sandbox: true, paybill: '529914', account: '638804', name: '' });
+  assert.deepEqual(data.mpesa, { stkEnabled: true, sandbox: true, paybill: '529914', account: '638804', name: 'KB M-Collection General Merchants (Kingdom Bank)' });
 });
 
 test('STK push → successful callback marks the order paid and confirmed (idempotent)', async () => {

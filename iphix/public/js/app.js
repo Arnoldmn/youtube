@@ -119,6 +119,7 @@
     $('#footer-wa').href = chat;
     $('#footer-address').textContent = [c.storeAddress, `WhatsApp: +${c.whatsappNumber}`].filter(Boolean).join(' • ');
     $('#footer-earn').textContent = `Share your link and earn ${c.commissionPct}% on every sale you bring.`;
+    $('#footer-pay').innerHTML = lipaCard({ compact: true });
     $('#year').textContent = new Date().getFullYear();
     renderUserChrome();
     updateCartBadge();
@@ -550,6 +551,7 @@
           <div class="card" style="margin-top:14px">
             <h3>Payment</h3>
             ${Object.entries(c.paymentMethods).map(([k, label], i) => `<label class="choice"><input type="radio" name="paymentMethod" value="${k}" ${(saved.paymentMethod || 'mpesa') === k || (!saved.paymentMethod && i === 0) ? 'checked' : ''}><span>${esc(label)}${k === 'mpesa' ? `<small>${mpesaHint()}</small>` : ''}</span></label>`).join('')}
+            <div id="lipa-wrap">${lipaCard()}</div>
             <div class="field"><label for="c-notes">Order notes (optional)</label><textarea id="c-notes" name="notes" rows="2" placeholder="Phone model, colour, preferred delivery time…"></textarea></div>
           </div>
         </div>
@@ -579,6 +581,9 @@
       }
     };
     $$('input[name=deliveryMethod]', form).forEach((r) => r.addEventListener('change', () => { toggleAddress(); refreshQuote(); }));
+    const toggleLipa = () => { $('#lipa-wrap').hidden = val('paymentMethod') !== 'mpesa'; };
+    $$('input[name=paymentMethod]', form).forEach((r) => r.addEventListener('change', toggleLipa));
+    toggleLipa();
     $('#apply-ref').addEventListener('click', () => {
       const code = val('refCode').toUpperCase();
       state.ref = code || null;
@@ -656,6 +661,22 @@
     return 'We send payment details on WhatsApp.';
   }
 
+  /** "Lipa na M-PESA" Paybill card, styled like the shop's printed sign. */
+  function lipaCard({ compact = false } = {}) {
+    const m = state.config.mpesa;
+    if (!m.paybill) return '';
+    return `<div class="lipa ${compact ? 'lipa-compact' : ''}">
+      <div class="lipa-head">Lipa na <b>M-PESA</b> <small>Paybill</small></div>
+      <div class="lipa-body">
+        ${m.name ? `<div class="lipa-name">${esc(m.name)}</div>` : ''}
+        <div class="lipa-label">Business number</div>
+        <div class="lipa-num">${esc(m.paybill)}</div>
+        ${m.account ? `<div class="lipa-label">Account no</div><div class="lipa-num lipa-acc">${esc(m.account).split('').map((d) => `<span>${d}</span>`).join('')}</div>` : ''}
+        ${compact ? '' : `<p class="lipa-note">${m.stkEnabled ? 'You\'ll also get a PIN prompt on your phone after placing the order.' : 'After placing your order, pay with these details and enter the M-Pesa confirmation code on the next page.'}</p>`}
+      </div>
+    </div>`;
+  }
+
   const showPayPanel = (order) => order.status !== 'cancelled' && (order.paymentMethod === 'mpesa' || order.paymentStatus !== 'unpaid');
 
   function paymentPill(order) {
@@ -686,6 +707,7 @@
       ${m.paybill ? `
         <details class="paybill" ${m.stkEnabled ? '' : 'open'}>
           <summary>${m.stkEnabled ? 'No prompt? Pay manually with Paybill' : 'How to pay with Lipa na M-Pesa'}</summary>
+          ${lipaCard({ compact: true })}
           <ol class="paybill-steps">
             <li>Open <b>M-Pesa</b> → <b>Lipa na M-Pesa</b> → <b>Pay Bill</b></li>
             <li>Business number: <b class="big-num">${esc(m.paybill)}</b> ${copyBtn(m.paybill)}</li>
