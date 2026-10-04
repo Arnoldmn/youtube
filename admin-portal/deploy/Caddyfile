@@ -1,0 +1,10 @@
+# Caddy gets and renews HTTPS certificates automatically.
+#   caddy run --config deploy/Caddyfile
+portal.example.com {
+    request_body {
+        max_size 30MB
+    }
+    reverse_proxy 127.0.0.1:4000 {
+        flush_interval -1   # stream live notifications immediately
+    }
+}

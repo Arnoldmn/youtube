@@ -1,0 +1,25 @@
+# Run the whole portal with one command:
+#   JWT_SECRET=$(openssl rand -hex 48) ADMIN_PASSWORD='choose-a-strong-one' docker compose up -d --build
+# then open http://localhost:4000
+services:
+  portal:
+    build: .
+    image: linguaops-admin-portal
+    ports:
+      - "${PORT:-4000}:4000"
+    environment:
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET (e.g. openssl rand -hex 48)}
+      ADMIN_NAME: ${ADMIN_NAME:-Admin}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@linguaops.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD (min. 10 characters) for the first admin}
+      SEED_DEMO: ${SEED_DEMO:-false}
+      # Behind an HTTPS reverse proxy (nginx, Caddy, Traefik…) set TRUST_PROXY=1 so the
+      # session cookie is marked Secure automatically.
+      TRUST_PROXY: ${TRUST_PROXY:-}
+    volumes:
+      - portal-data:/data
+    restart: unless-stopped
+
+volumes:
+  portal-data:

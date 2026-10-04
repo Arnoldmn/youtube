@@ -1,0 +1,31 @@
+# Fly.io — https://fly.io/docs/
+#   fly launch --no-deploy --copy-config      (pick an app name/region)
+#   fly volumes create portal_data --size 5
+#   fly secrets set JWT_SECRET=$(openssl rand -hex 48) ADMIN_PASSWORD='choose-a-strong-one' ADMIN_EMAIL=you@company.com
+#   fly deploy
+app = "linguaops-admin-portal"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  TRUST_PROXY = "1"
+
+[mounts]
+  source = "portal_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = "off"     # keep the live-notification connections open
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "15s"
+    interval = "30s"
+    method = "GET"
+    path = "/api/health"
+    timeout = "5s"

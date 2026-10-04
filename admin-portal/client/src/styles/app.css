@@ -1,0 +1,129 @@
+/* Styles for React-only pieces (auth, menus, account/team pages). Tokens come from base.css. */
+
+#root { height: 100%; }
+.muted { color: var(--text-3); }
+.small { font-size: 12px; }
+.btn.block { width: 100%; height: 42px; }
+.btn[disabled] { opacity: .55; pointer-events: none; }
+a.icon-btn { color: var(--text-2); }
+
+/* Boot + spinners */
+.boot { height: 100vh; display: grid; place-items: center; background: var(--bg); }
+.spinner-wrap { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 48px 16px; color: var(--text-3); font-size: 13px; }
+.spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border-strong); border-top-color: var(--accent); animation: spin .7s linear infinite; display: inline-block; flex: none; }
+.spinner.sm { width: 14px; height: 14px; border-color: rgba(255,255,255,.4); border-top-color: #fff; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Sign-in ---------- */
+.auth-page { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 520px); background: var(--bg); }
+.auth-art {
+  position: relative; overflow: hidden; padding: 40px; color: #fff; display: flex; flex-direction: column; justify-content: space-between;
+  background: radial-gradient(1200px 600px at -10% -10%, #7c7cff 0%, transparent 60%), radial-gradient(900px 700px at 110% 110%, #a855f7 0%, transparent 55%), linear-gradient(135deg, #3b3bd6, #5b21b6);
+}
+.auth-art::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.12) 1px, transparent 1px); background-size: 22px 22px; mask-image: linear-gradient(180deg, transparent, #000 40%, transparent); }
+.auth-art .brand-text strong, .auth-art .brand-text span { color: #fff; }
+.auth-art .brand-text span { opacity: .75; }
+.auth-art .brand-mark { background: rgba(255,255,255,.18); box-shadow: none; backdrop-filter: blur(6px); }
+.auth-pitch { position: relative; z-index: 1; max-width: 460px; }
+.auth-pitch h2 { font-size: 34px; line-height: 1.15; letter-spacing: -.03em; font-weight: 700; }
+.auth-pitch ul { list-style: none; padding: 0; margin: 24px 0 0; display: flex; flex-direction: column; gap: 12px; }
+.auth-pitch li { display: flex; align-items: center; gap: 12px; font-size: 15px; opacity: .92; }
+.auth-pitch li .ico { width: 30px; height: 30px; padding: 7px; border-radius: 9px; background: rgba(255,255,255,.16); }
+.auth-card { align-self: center; justify-self: center; width: 100%; max-width: 400px; padding: 40px 32px; display: flex; flex-direction: column; gap: 16px; }
+.auth-card h1 { font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+.auth-card .field input { height: 44px; font-size: 15px; }
+.pw-wrap { position: relative; }
+.pw-wrap .link-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); }
+.pw-wrap input { padding-right: 64px !important; }
+.mobile-only { display: none !important; }
+
+/* ---------- Shell additions ---------- */
+.me { color: inherit; transition: border-color .15s; }
+.me:hover, .me.active { border-color: var(--accent); }
+.live-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); padding: 0 10px; }
+.live-status i { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 3px var(--amber-soft); }
+.live-status.on i { background: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+
+.user-menu { position: relative; }
+.user-btn { display: flex; align-items: center; gap: 4px; border: 1px solid transparent; background: none; padding: 3px 6px 3px 3px; border-radius: 10px; color: var(--text-2); }
+.user-btn:hover { background: var(--surface-3); }
+.menu-pop {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 36; width: 250px; padding: 6px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); animation: pop .14s var(--ease);
+}
+.menu-who { padding: 8px 10px 10px; border-bottom: 1px solid var(--border); margin-bottom: 4px; display: flex; flex-direction: column; }
+.menu-who strong { font-size: 13px; }
+.menu-who span { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; }
+.menu-who em { font-style: normal; font-size: 11px; font-weight: 600; color: var(--accent-text); margin-top: 4px; }
+.menu-pop button { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; padding: 8px 10px; border-radius: 8px; text-align: left; font-weight: 500; color: var(--text-2); }
+.menu-pop button:hover { background: var(--surface-3); color: var(--text); }
+
+.toolbar-search { width: 280px; height: 32px; }
+.jobs-toolbar .toolbar-search { margin-left: 4px; }
+
+/* ---------- Cards / account ---------- */
+.narrow-page { max-width: 720px; margin: 0 auto; width: 100%; padding: 0 24px 40px; display: flex; flex-direction: column; gap: 16px; }
+.narrow-page .page-head { padding-left: 0; padding-right: 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.card-title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.card-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.profile-row { display: flex; gap: 16px; align-items: center; }
+.profile-row h2 { font-size: 20px; font-weight: 700; }
+
+/* ---------- Team ---------- */
+.team-page { padding: 0 24px 24px; }
+.team-table { min-width: 900px; }
+.team-table tbody tr { cursor: default; }
+.team-table tr.inactive td { opacity: .55; }
+.who-cell { display: flex; align-items: center; gap: 10px; }
+.who-cell strong { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.who-cell span { font-size: 12px; color: var(--text-3); }
+.you { font-size: 10px; font-weight: 700; text-transform: uppercase; background: var(--accent-soft); color: var(--accent-text) !important; padding: 1px 6px; border-radius: 5px; }
+.row-actions { white-space: nowrap; width: 1%; }
+.row-actions > * { display: inline-grid !important; vertical-align: middle; }
+.icon-btn.danger-ico:hover { background: var(--red-soft); color: var(--red); }
+.team-table .kv { flex-wrap: nowrap; }
+.creds { margin: 0; padding: 14px; border-radius: var(--radius-sm); background: var(--surface-3); font: 500 13px/1.6 ui-monospace, "SF Mono", Menlo, monospace; white-space: pre-wrap; user-select: all; }
+
+/* ---------- Jobs / drawer bits ---------- */
+.section h3 > span { display: flex; gap: 4px; }
+.edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.edit-grid .span-2 { grid-column: span 2; }
+.file-list li { list-style: none; }
+.state-note { font-size: 13px; font-weight: 600; display: flex; gap: 6px; align-items: center; }
+.state-note.violet { color: var(--violet); }
+.state-note.green { color: var(--green); }
+.decline-box { background: var(--red-soft) !important; border-color: color-mix(in srgb, var(--red) 25%, transparent) !important; }
+.decline-box select { height: 36px; border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; background: var(--surface); }
+.emp-kpis { padding: 0 !important; margin-left: auto; display: grid; grid-template-columns: repeat(3, auto); }
+
+/* ---------- Applications page in the React shell ---------- */
+.apps-page { overflow: hidden; }
+.apps-page > .workspace { flex: 1 1 auto; min-height: 420px; }
+.apps-page .filters .toolbar-search { width: 240px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  .toolbar-search { width: 200px; }
+}
+@media (max-width: 900px) {
+  .auth-page { grid-template-columns: 1fr; }
+  .auth-art { display: none; }
+  .mobile-only { display: flex !important; }
+  .auth-card { padding: 32px 20px; }
+  .app.nav-open .sidebar { transform: none; }
+  .workspace.detail-open .detail-pane { transform: none; }
+  .apps-page { overflow-y: auto; }
+  .toolbar-search { width: 100%; order: 10; }
+  .team-page, .narrow-page { padding-left: 16px; padding-right: 16px; }
+  .emp-kpis { margin-left: 0; width: 100%; display: flex; }
+  .user-btn .ico { display: none; }
+}
+@media (max-width: 640px) {
+  .edit-grid { grid-template-columns: 1fr; }
+  .edit-grid .span-2 { grid-column: auto; }
+  .profile-row { align-items: flex-start; }
+}
+
+/* File-type badges on document tiles keep white text */
+.doc .doc-ico { color: #fff; font-size: 10px; }

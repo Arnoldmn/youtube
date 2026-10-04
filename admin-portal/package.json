@@ -1,0 +1,27 @@
+{
+  "name": "linguaops-admin-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Admin Portal for a translation agency: jobs, assignments, live notifications and vendor applications (React + Node.js).",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm run dev -w server",
+    "dev:client": "npm run dev -w client",
+    "build": "npm run build -w client",
+    "start": "npm start -w server",
+    "seed": "npm run seed -w server",
+    "test": "npm test -w server",
+    "reset-demo": "npm run seed -w server -- --reset"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  },
+  "engines": {
+    "node": ">=20.6"
+  }
+}

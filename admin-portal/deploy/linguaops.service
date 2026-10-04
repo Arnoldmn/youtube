@@ -1,0 +1,17 @@
+# systemd unit (alternative to PM2). Copy to /etc/systemd/system/, then:
+#   sudo systemctl daemon-reload && sudo systemctl enable --now linguaops
+[Unit]
+Description=Lingua Ops Admin Portal
+After=network.target
+
+[Service]
+Type=simple
+User=linguaops
+WorkingDirectory=/opt/linguaops/admin-portal
+EnvironmentFile=/opt/linguaops/admin-portal/.env
+ExecStart=/usr/bin/node server/src/index.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
