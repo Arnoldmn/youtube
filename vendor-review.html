@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Applications · Admin Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="vendor-review.css">
+</head>
+
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar" aria-label="Admin navigation">
+            <div class="brand">
+                <div class="brand-mark">L</div>
+                <div class="brand-text">
+                    <strong>Lingua Ops</strong>
+                    <span>Admin Portal</span>
+                </div>
+            </div>
+            <nav class="nav">
+                <a class="nav-item" href="#"><span data-icon="grid"></span>Dashboard</a>
+                <a class="nav-item active" href="#" aria-current="page"><span data-icon="inbox"></span>Applications<span class="nav-badge" id="navBadge">0</span></a>
+                <a class="nav-item" href="#"><span data-icon="users"></span>Vendors</a>
+                <a class="nav-item" href="#"><span data-icon="folder"></span>Projects</a>
+                <a class="nav-item" href="#"><span data-icon="receipt"></span>Invoicing</a>
+                <a class="nav-item" href="#"><span data-icon="chart"></span>Reports</a>
+            </nav>
+            <div class="sidebar-foot">
+                <button class="nav-item" id="shortcutsBtn" type="button"><span data-icon="keyboard"></span>Shortcuts<kbd>?</kbd></button>
+                <div class="me">
+                    <div class="avatar sm" style="--h:250">AR</div>
+                    <div>
+                        <strong>Alex Rivera</strong>
+                        <span>Vendor Manager</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="scrim" id="scrim"></div>
+
+        <!-- Main -->
+        <main class="main">
+            <header class="topbar">
+                <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Open navigation"><span data-icon="menu"></span></button>
+                <div class="crumbs"><span>Recruitment</span><span data-icon="chevron-right"></span><strong>Vendor applications</strong></div>
+                <div class="topbar-actions">
+                    <label class="search">
+                        <span data-icon="search"></span>
+                        <input id="searchInput" type="search" placeholder="Search name, language, city…" autocomplete="off">
+                        <kbd>/</kbd>
+                    </label>
+                    <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle theme"><span data-icon="moon"></span></button>
+                    <button class="icon-btn" type="button" aria-label="Notifications"><span data-icon="bell"></span><i class="dot"></i></button>
+                </div>
+            </header>
+
+            <section class="page-head">
+                <div>
+                    <h1>Vendor application review</h1>
+                    <p>Screen incoming linguists, verify credentials and make onboarding decisions.</p>
+                </div>
+                <div class="kpis" id="kpis"></div>
+            </section>
+
+            <section class="toolbar">
+                <div class="tabs" role="tablist" id="statusTabs"></div>
+                <div class="filters" id="filters">
+                    <div class="filter" data-filter="pairs"></div>
+                    <div class="filter" data-filter="specs"></div>
+                    <div class="filter" data-filter="levels"></div>
+                    <div class="filter" data-filter="verify"></div>
+                    <button class="link-btn" id="clearFilters" type="button" hidden>Clear all</button>
+                    <div class="spacer"></div>
+                    <label class="select">
+                        <span data-icon="sort"></span>
+                        <select id="sortSelect" aria-label="Sort">
+                            <option value="newest">Newest first</option>
+                            <option value="oldest">Oldest first</option>
+                            <option value="score">Highest assessment</option>
+                            <option value="exp">Most experience</option>
+                            <option value="verified">Most verified</option>
+                        </select>
+                    </label>
+                </div>
+            </section>
+
+            <section class="workspace" id="workspace">
+                <!-- Master list -->
+                <div class="pane list-pane">
+                    <div class="list-head">
+                        <label class="check"><input type="checkbox" id="checkAll" aria-label="Select all"><span></span></label>
+                        <span id="listCount">0 applicants</span>
+                    </div>
+                    <div class="bulk" id="bulkBar" hidden>
+                        <span id="bulkCount">0 selected</span>
+                        <div class="bulk-actions">
+                            <button class="btn sm success-soft" data-bulk="approve" type="button"><span data-icon="check"></span>Approve</button>
+                            <button class="btn sm info-soft" data-bulk="info" type="button"><span data-icon="help"></span>Info</button>
+                            <button class="btn sm danger-soft" data-bulk="reject" type="button"><span data-icon="x"></span>Reject</button>
+                        </div>
+                    </div>
+                    <ul class="list" id="list" role="listbox" aria-label="Applicants" tabindex="0"></ul>
+                </div>
+
+                <!-- Detail -->
+                <div class="pane detail-pane" id="detail" aria-live="polite"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Decision modal -->
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
+        <div class="modal-card">
+            <form id="modalForm"></form>
+        </div>
+    </div>
+
+    <!-- Shortcuts modal -->
+    <div class="modal" id="shortcuts" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitle" hidden>
+        <div class="modal-card narrow">
+            <div class="modal-head">
+                <h2 id="shortcutsTitle">Keyboard shortcuts</h2>
+                <button class="icon-btn" data-close type="button" aria-label="Close"><span data-icon="x"></span></button>
+            </div>
+            <dl class="shortcut-list">
+                <dt><kbd>J</kbd><kbd>K</kbd></dt><dd>Next / previous applicant</dd>
+                <dt><kbd>A</kbd></dt><dd>Approve</dd>
+                <dt><kbd>I</kbd></dt><dd>Request more info</dd>
+                <dt><kbd>R</kbd></dt><dd>Reject</dd>
+                <dt><kbd>X</kbd></dt><dd>Toggle selection</dd>
+                <dt><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></dt><dd>Overview / Documents / Activity</dd>
+                <dt><kbd>/</kbd></dt><dd>Search</dd>
+                <dt><kbd>Esc</kbd></dt><dd>Close dialog or menu</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <script src="vendor-data.js"></script>
+    <script src="vendor-review.js"></script>
+</body>
+
+</html>
