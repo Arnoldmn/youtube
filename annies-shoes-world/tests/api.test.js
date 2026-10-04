@@ -94,7 +94,7 @@ test("full shopper journey: signup → order → WhatsApp link → tracking → 
   const waUrl = new URL(placed.body.whatsappUrl);
   assert.equal(waUrl.origin + waUrl.pathname, "https://wa.me/254700000000");
   const text = waUrl.searchParams.get("text");
-  assert.ok(text.includes(order.id) && text.includes("Velvet Stiletto") && text.includes(`/#/track/${order.id}`));
+  assert.ok(text.includes(order.id) && text.includes("Classic Stiletto Pump") && text.includes(`/#/track/${order.id}`));
 
   // Invalid orders rejected
   assert.equal((await api("/api/orders", { method: "POST", body: { ...ORDER, items: [{ id: "sh-velvet-stiletto", colorway: 0, size: 11, qty: 1 }] } })).status, 400);

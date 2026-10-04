@@ -3,10 +3,14 @@
   "version": "2.0.0",
   "private": true,
   "description": "Annie's Shoes World: women's shoes, clothing, handbags and watches, with accounts and WhatsApp ordering and tracking",
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "photos:check": "node scripts/photos.js check",
+    "photos:download": "node scripts/photos.js download"
   }
 }

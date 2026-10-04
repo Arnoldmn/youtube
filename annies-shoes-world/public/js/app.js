@@ -264,7 +264,7 @@
       const d = DEPT[c];
       const n = PRODUCTS.filter((p) => p.category === c).length;
       return `<button class="dept" style="--dept-bg:${d.bg}" data-dept="${c}">
-        ${productSVG(byId[d.id], 0)}
+        ${productArt(byId[d.id], 0)}
         <b>${c}</b><span>${d.blurb} · ${n} styles</span>
       </button>`;
     }).join("");
@@ -481,6 +481,7 @@
         ${priceHTML(p)}
         <p>${esc(p.description)}</p>
         <div class="pm-label">Colour <b>${esc(c.name)}</b></div>
+        ${p.image && !c.image && m.colorIdx !== 0 ? `<p class="shown-in">Photo shows ${esc(p.colorways[0].name)}. Your order will be ${esc(c.name)}.</p>` : ""}
         <div class="swatches" data-pm-colors>${p.colorways.map((cw, i) => swatchHTML(cw, i, i === m.colorIdx)).join("")}</div>
         ${
           oneSize

@@ -50,9 +50,20 @@ npm start                # http://localhost:3000   ·   order desk: http://local
 
 When a buyer messages an order number (or just "hi"), the shop replies automatically with the status. Replies only cover orders placed from the sender's own number. Note: WhatsApp only lets businesses send free-form messages within 24 hours of the customer's last message; outside that window it needs approved templates, and the order desk falls back to opening WhatsApp for you.
 
-## Adding your own photos
+## Product photos
 
-Put images in `public/images/` and add `image: "images/…"` to a hero slide or a product (or to a single colour) in `public/js/products.js`. Until then, each product shows a built-in illustration, which is also used if a photo fails to load.
+Every product and hero slide uses a real photo from [Pexels](https://www.pexels.com), which is free for commercial use with no attribution required ([licence](https://www.pexels.com/license/)). The links are in `public/js/products.js` as `image: px(<pexels photo id>)`.
+
+```bash
+npm run photos:check      # confirm every photo loads
+npm run photos:download   # save them into public/images/pexels/ and serve them from your own site (recommended before going live)
+```
+
+**To change a photo:** open the photo on pexels.com and copy the number at the end of its address (e.g. `pexels.com/photo/...-27204296/` → `27204296`). Put it in `px(...)` for that product.
+
+**To use your own photos:** put them in `public/images/` and set `image: "images/my-photo.jpg"` on the product. You can also set `image` on a single colour so each colour shows its own photo.
+
+Each product photo shows its first colour; when a shopper picks another colour, the product view says so. If a photo ever fails to load, the built-in illustration is shown instead.
 
 ## Tests
 

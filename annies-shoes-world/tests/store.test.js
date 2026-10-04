@@ -48,7 +48,7 @@ test("cart merges identical lines (including one-size items) and caps quantity",
 test("resolveLines validates sizes, colours and quantities against the catalog", () => {
   const ok = S.resolveLines(
     [
-      { id: "sh-velvet-stiletto", colorway: 1, size: 7, qty: 2 },
+      { id: "sh-velvet-stiletto", colorway: 0, size: 7, qty: 2 },
       { id: "cl-knit-top", colorway: 0, size: "S", qty: 1 },
       { id: "wa-rose-classic", colorway: 0, size: null, qty: 1 },
     ],
@@ -88,4 +88,9 @@ test("order statuses", () => {
   assert.equal(S.statusInfo("shipped").label, "Out for delivery");
   assert.equal(S.statusInfo("cancelled").key, "cancelled");
   assert.equal(S.statusInfo("bogus"), null);
+});
+
+test("every product and hero slide has a photo", () => {
+  for (const p of PRODUCTS) assert.match(p.image, /^https:\/\/images\.pexels\.com\/photos\/(\d+)\/pexels-photo-\1\.jpeg/, p.id);
+  for (const s of HERO_SLIDES) assert.ok(s.image, s.title);
 });
