@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobs · Admin Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="vendor-review.css">
+    <link rel="stylesheet" href="jobs.css">
+</head>
+
+<body>
+    <div class="app">
+        <aside class="sidebar" aria-label="Admin navigation">
+            <div class="brand">
+                <div class="brand-mark">L</div>
+                <div class="brand-text"><strong>Lingua Ops</strong><span>Admin Portal</span></div>
+            </div>
+            <nav class="nav">
+                <a class="nav-item" href="#"><span data-icon="grid"></span>Dashboard</a>
+                <a class="nav-item active" href="jobs.html" aria-current="page"><span data-icon="briefcase"></span>Jobs<span class="nav-badge" id="navBadge">0</span></a>
+                <a class="nav-item" href="vendor-review.html"><span data-icon="inbox"></span>Applications</a>
+                <a class="nav-item" href="#team" data-action="focus-team"><span data-icon="users"></span>Team</a>
+                <a class="nav-item" href="#"><span data-icon="receipt"></span>Invoicing</a>
+                <a class="nav-item" href="#"><span data-icon="chart"></span>Reports</a>
+            </nav>
+            <div class="sidebar-foot">
+                <a class="nav-item" href="employee.html" target="_blank" rel="noopener"><span data-icon="eye"></span>Employee workspace</a>
+                <button class="nav-item" type="button" id="resetBtn"><span data-icon="refresh"></span>Reset demo data</button>
+                <div class="me">
+                    <div class="avatar sm" style="--h:250">AR</div>
+                    <div><strong>Alex Rivera</strong><span>Project Manager</span></div>
+                </div>
+            </div>
+        </aside>
+        <div class="scrim" id="scrim"></div>
+
+        <main class="main">
+            <header class="topbar">
+                <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Open navigation"><span data-icon="menu"></span></button>
+                <div class="crumbs"><span>Operations</span><span data-icon="chevron-right"></span><strong>Jobs</strong></div>
+                <div class="topbar-actions">
+                    <label class="search">
+                        <span data-icon="search"></span>
+                        <input id="searchInput" type="search" placeholder="Search jobs, clients, IDs…" autocomplete="off">
+                        <kbd>/</kbd>
+                    </label>
+                    <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle theme"></button>
+                    <div class="bell-wrap">
+                        <button class="icon-btn" id="bellBtn" type="button" aria-label="Notifications" aria-expanded="false" aria-controls="notifPanel">
+                            <span data-icon="bell"></span><span class="bell-count" id="bellCount" hidden>0</span>
+                        </button>
+                        <div class="notif-panel" id="notifPanel" hidden></div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-scroll">
+                <section class="page-head">
+                    <div>
+                        <h1>Jobs</h1>
+                        <p>Create and upload jobs, assign them to your team and review finished work.</p>
+                    </div>
+                    <div class="head-actions">
+                        <button class="btn" type="button" id="importBtn"><span data-icon="upload"></span>Import CSV</button>
+                        <button class="btn primary" type="button" id="newJobBtn"><span data-icon="plus"></span>New job<kbd>N</kbd></button>
+                    </div>
+                </section>
+
+                <section class="job-kpis" id="kpis"></section>
+
+                <section class="toolbar jobs-toolbar">
+                    <div class="tabs" role="tablist" id="viewTabs">
+                        <button class="tab" role="tab" type="button" data-view="board"><span data-icon="columns"></span>Board</button>
+                        <button class="tab" role="tab" type="button" data-view="list"><span data-icon="list"></span>List</button>
+                    </div>
+                    <label class="select"><span data-icon="users"></span>
+                        <select id="assigneeFilter" aria-label="Filter by assignee"></select>
+                    </label>
+                    <label class="select"><span data-icon="flag"></span>
+                        <select id="priorityFilter" aria-label="Filter by priority">
+                            <option value="all">Any priority</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="high">High</option>
+                            <option value="normal">Normal</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </label>
+                    <button class="link-btn" id="clearFilters" type="button" hidden>Clear</button>
+                    <div class="spacer"></div>
+                    <label class="switch" title="Simulates your team accepting, working on and finishing jobs so you can see notifications arrive">
+                        <input type="checkbox" id="simToggle"><span class="track"></span>Live demo
+                    </label>
+                </section>
+
+                <section class="jobs-layout">
+                    <div class="jobs-main" id="jobsMain"></div>
+                    <aside class="team-rail" id="team" aria-label="Team workload"></aside>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Job drawer -->
+    <div class="drawer-scrim" id="drawerScrim" hidden></div>
+    <aside class="drawer" id="drawer" aria-label="Job details" hidden></aside>
+
+    <!-- New job -->
+    <div class="modal" id="jobModal" role="dialog" aria-modal="true" aria-labelledby="jobModalTitle" hidden>
+        <div class="modal-card wide">
+            <form id="jobForm" novalidate>
+                <div class="modal-head">
+                    <div class="modal-ico info"><span data-icon="briefcase"></span></div>
+                    <div>
+                        <h2 id="jobModalTitle">New job</h2>
+                        <p>Upload the source files, set the brief and pick who should do it.</p>
+                    </div>
+                    <button class="icon-btn" type="button" data-close aria-label="Close"><span data-icon="x"></span></button>
+                </div>
+                <div class="modal-body">
+                    <div class="dropzone" id="jobDrop" tabindex="0" role="button" aria-label="Upload source files">
+                        <input type="file" id="jobFiles" multiple hidden>
+                        <span class="dz-ico"><span data-icon="upload"></span></span>
+                        <div><strong>Drop source files here</strong> or <u>browse</u><small>DOCX, PDF, XLSX, TXT, IDML… up to 25 MB each. Word count is detected from .txt files.</small></div>
+                    </div>
+                    <ul class="file-list" id="jobFileList"></ul>
+
+                    <div class="form-grid">
+                        <label class="field span-2"><span>Job title</span><input name="title" required placeholder="e.g. Employment contract – Berlin office"></label>
+                        <label class="field"><span>Client</span><input name="client" required list="clientList" placeholder="Client name"></label>
+                        <label class="field"><span>Service</span><select name="service" id="serviceSelect"></select></label>
+                        <label class="field"><span>Source language</span><select name="source" id="sourceSelect" required></select></label>
+                        <label class="field"><span>Target language</span><select name="target" id="targetSelect" required></select></label>
+                        <label class="field"><span>Word count</span><input name="words" type="number" min="0" step="1" required placeholder="0"></label>
+                        <label class="field"><span>Rate <small>(€ / word)</small></span><input name="rate" type="number" min="0" step="0.01"></label>
+                        <label class="field"><span>Deadline</span><input name="deadline" type="datetime-local" required></label>
+                        <div class="field"><span>Priority</span>
+                            <div class="seg" id="prioritySeg">
+                                <label><input type="radio" name="priority" value="low"><span>Low</span></label>
+                                <label><input type="radio" name="priority" value="normal" checked><span>Normal</span></label>
+                                <label><input type="radio" name="priority" value="high"><span>High</span></label>
+                                <label><input type="radio" name="priority" value="urgent"><span>Urgent</span></label>
+                            </div>
+                        </div>
+                        <label class="field span-2"><span>Instructions <small>(optional)</small></span><textarea name="instructions" placeholder="Glossary, tone of voice, formatting, reference material…"></textarea></label>
+                    </div>
+
+                    <div class="field">
+                        <span>Assign to <small>— best matches for the language pair first</small></span>
+                        <div class="assign-grid" id="assignGrid"></div>
+                    </div>
+                    <p class="form-error" id="jobError" hidden></p>
+                </div>
+                <div class="modal-foot">
+                    <span class="foot-note" id="jobValue"></span>
+                    <button class="btn ghost" type="button" data-close>Cancel</button>
+                    <button class="btn primary" type="submit"><span data-icon="plus"></span>Create job</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <datalist id="clientList"></datalist>
+
+    <!-- CSV import -->
+    <div class="modal" id="importModal" role="dialog" aria-modal="true" aria-labelledby="importTitle" hidden>
+        <div class="modal-card wide">
+            <div class="modal-head">
+                <div class="modal-ico info"><span data-icon="upload"></span></div>
+                <div>
+                    <h2 id="importTitle">Import jobs from CSV</h2>
+                    <p>Create many jobs at once. Rows with an assignee are assigned straight away.</p>
+                </div>
+                <button class="icon-btn" type="button" data-close aria-label="Close"><span data-icon="x"></span></button>
+            </div>
+            <div class="modal-body">
+                <div class="dropzone" id="csvDrop" tabindex="0" role="button" aria-label="Upload CSV file">
+                    <input type="file" id="csvFile" accept=".csv,text/csv" hidden>
+                    <span class="dz-ico"><span data-icon="file"></span></span>
+                    <div><strong>Drop a .csv file</strong> or <u>browse</u><small>Columns: title, client, source, target, service, words, deadline, priority, assignee</small></div>
+                </div>
+                <button class="link-btn" type="button" id="csvTemplate" style="align-self:flex-start"><span data-icon="download"></span> Download template</button>
+                <div id="csvPreview"></div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn ghost" type="button" data-close>Cancel</button>
+                <button class="btn primary" type="button" id="csvImport" disabled>Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prompt (revision note, delete confirm) -->
+    <div class="modal" id="promptModal" role="dialog" aria-modal="true" aria-labelledby="promptTitle" hidden>
+        <div class="modal-card">
+            <form id="promptForm"></form>
+        </div>
+    </div>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <script src="ui.js"></script>
+    <script src="jobs-store.js"></script>
+    <script src="jobs.js"></script>
+</body>
+
+</html>

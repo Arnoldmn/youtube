@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Jobs · Employee Workspace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="vendor-review.css">
+    <link rel="stylesheet" href="jobs.css">
+</head>
+
+<body>
+    <div class="app">
+        <main class="main">
+            <header class="topbar">
+                <div class="brand" style="padding:0">
+                    <div class="brand-mark">L</div>
+                    <div class="brand-text"><strong>Lingua Ops</strong><span>Employee workspace</span></div>
+                </div>
+                <div class="topbar-actions">
+                    <label class="select who-select" title="Demo: switch which employee you are">
+                        <span data-icon="users"></span>
+                        <select id="whoSelect" aria-label="Signed in as"></select>
+                    </label>
+                    <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle theme"></button>
+                    <div class="bell-wrap">
+                        <button class="icon-btn" id="bellBtn" type="button" aria-label="Notifications" aria-expanded="false" aria-controls="notifPanel">
+                            <span data-icon="bell"></span><span class="bell-count" id="bellCount" hidden>0</span>
+                        </button>
+                        <div class="notif-panel" id="notifPanel" hidden></div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-scroll">
+                <div class="emp-shell">
+                    <section class="emp-hero" id="hero"></section>
+                    <div class="tabs" role="tablist" id="taskTabs"></div>
+                    <section class="emp-tasks" id="tasks" aria-live="polite"></section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <script src="ui.js"></script>
+    <script src="jobs-store.js"></script>
+    <script src="employee.js"></script>
+</body>
+
+</html>
