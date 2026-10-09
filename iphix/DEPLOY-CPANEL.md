@@ -42,9 +42,18 @@ Open your domain. The store should load. 🎉
 
 > If NPM Install complains that `node_modules` already exists, delete the `iphix/node_modules` folder in File Manager and click **Run NPM Install** again. cPanel keeps its own copy of these libraries elsewhere.
 
-## 4. HTTPS (SSL)
+## 4. HTTPS (free SSL with AutoSSL / Let's Encrypt)
 
-cPanel → **SSL/TLS Status** → select your domain → **Run AutoSSL**. HTTPS matters because:
+1. Make sure the domain's DNS **A record** points to this server. The domain must already open your site over `http://`.
+2. cPanel → **SSL/TLS Status** → tick `iphixcommunications.com` and `www.iphixcommunications.com` → **Run AutoSSL**. Wait 1–5 minutes, then refresh. Both should show a green padlock.
+3. cPanel → **Domains** → turn on **Force HTTPS Redirect** for the domain.
+4. In **Setup Node.js App**, click **Restart**.
+
+The store serves `/.well-known/` files from `public_html`, so the certificate check (and every automatic renewal every 60–90 days) works even though Node answers all requests.
+
+Which free provider issues the certificate (Let's Encrypt or Sectigo) is chosen by the server owner in **WHM → SSL/TLS → Manage AutoSSL → Providers**. Both are free and trusted by all browsers.
+
+HTTPS matters because:
 - logins use secure cookies;
 - links in WhatsApp messages and receipts use `BASE_URL`;
 - M-Pesa payment prompts (if you add Daraja keys later) need an https callback.

@@ -7,6 +7,10 @@ process.env.ADMIN_PASSWORD = 'AdminPass123';
 process.env.COMMISSION_PCT = '5';
 process.env.REFERRAL_DISCOUNT_PCT = '3';
 process.env.MIN_PAYOUT = '50';
+const wellKnown = require('fs').mkdtempSync(require('path').join(require('os').tmpdir(), 'wk-'));
+require('fs').mkdirSync(require('path').join(wellKnown, 'acme-challenge'));
+require('fs').writeFileSync(require('path').join(wellKnown, 'acme-challenge', 'test-token'), 'token-content');
+process.env.WELL_KNOWN_DIR = wellKnown;
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -243,4 +247,12 @@ test('app icon and manifest fall back cleanly when the logo PNGs are not uploade
   assert.equal(manifest.icons[0].src, '/brand/icon');
   const { data } = await client()('/api/config');
   assert.ok('brand' in data);
+});
+
+test('serves SSL validation files from the document root (.well-known)', async () => {
+  // The test server was created with WELL_KNOWN_DIR pointing at a temp folder (see top of file).
+  const res = await fetch(`${base}/.well-known/acme-challenge/test-token`);
+  assert.equal(res.status, 200);
+  assert.equal(await res.text(), 'token-content');
+  assert.equal((await fetch(`${base}/.well-known/acme-challenge/missing`)).status, 404);
 });

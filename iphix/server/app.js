@@ -250,6 +250,12 @@ function createApp({ db, config, mpesa: mpesaClient }) {
   // ---------- middleware ----------
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
+
+  // SSL certificates (cPanel AutoSSL / Let's Encrypt): the issuer checks the domain by fetching a file under
+  // /.well-known/ that cPanel writes into the domain's document root. Because this Node app answers every
+  // request for the domain, serve those files from public_html so validation and renewals keep working.
+  const wellKnownDir = process.env.WELL_KNOWN_DIR || path.join(os.homedir(), 'public_html', '.well-known');
+  app.use('/.well-known', express.static(wellKnownDir, { index: false, fallthrough: true }));
   const jsonSmall = express.json({ limit: '200kb', verify: (req, res, buf) => { req.rawBody = buf; } });
   const jsonUpload = express.json({ limit: '8mb' });
   app.use((req, res, next) => (req.path === '/api/admin/uploads' ? jsonUpload : jsonSmall)(req, res, next));
