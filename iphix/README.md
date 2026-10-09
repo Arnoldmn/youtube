@@ -98,7 +98,7 @@ For privacy, a status is only shared with the phone number used on the order.
 
 ## Deploying
 
-**cPanel:** follow [DEPLOY-CPANEL.md](DEPLOY-CPANEL.md). `npm run build:cpanel` builds `dist/iphix-cpanel.zip`, ready to upload, with a production `.env` and freshly generated secrets.
+**cPanel:** follow [DEPLOY-CPANEL.md](DEPLOY-CPANEL.md). `npm run build:cpanel -- iphixcommunications.com` builds `dist/iphix-cpanel.zip`, ready to upload, with a production `.env` and freshly generated secrets.
 
 Any other host that runs Node 18 or newer also works: a VPS, Railway, Render or Fly.io.
 
