@@ -1,7 +1,6 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { DatabaseSync } = require('node:sqlite');
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS users (
@@ -156,11 +155,89 @@ function migrate(db) {
   }
 }
 
-function openDb(file) {
-  if (file !== ':memory:') fs.mkdirSync(path.dirname(file), { recursive: true });
+/** Node's built-in SQLite (Node 22.13+). Returns null when this Node version doesn't have it. */
+function openNative(file) {
+  let DatabaseSync;
+  try {
+    ({ DatabaseSync } = require('node:sqlite'));
+  } catch {
+    return null;
+  }
   const db = new DatabaseSync(file);
-  db.exec('PRAGMA foreign_keys = ON;');
+  db.driver = 'node:sqlite';
   if (file !== ':memory:') db.exec('PRAGMA journal_mode = WAL;');
+  return db;
+}
+
+/**
+ * Fallback for hosts with older Node (e.g. cPanel offering Node 18/20): sql.js is SQLite compiled to
+ * WebAssembly, so it needs no native build. The database lives in memory and is saved to the same
+ * file shortly after every change (and on shutdown).
+ */
+async function openSqlJs(file) {
+  const SQL = await require('sql.js')();
+  const persist = file !== ':memory:';
+  const raw = new SQL.Database(persist && fs.existsSync(file) ? fs.readFileSync(file) : undefined);
+  let timer = null;
+  const flush = () => {
+    clearTimeout(timer);
+    timer = null;
+    if (!persist) return;
+    const data = raw.export(); // export() reopens the database, which resets pragmas
+    raw.exec('PRAGMA foreign_keys = ON;');
+    fs.writeFileSync(`${file}.tmp`, data);
+    fs.renameSync(`${file}.tmp`, file);
+  };
+  const dirty = () => { if (persist && !timer) timer = setTimeout(flush, 100); };
+  const bindable = (params) => params.map((v) => (v === undefined ? null : typeof v === 'boolean' ? Number(v) : v));
+  const withStmt = (sql, params, fn) => {
+    const st = raw.prepare(sql);
+    try {
+      st.bind(bindable(params));
+      return fn(st);
+    } finally {
+      st.free();
+    }
+  };
+  if (persist) {
+    process.on('exit', flush);
+    for (const sig of ['SIGINT', 'SIGTERM']) process.once(sig, () => { flush(); process.exit(0); });
+  }
+  return {
+    driver: 'sql.js',
+    flush,
+    exec(sql) {
+      raw.exec(sql);
+      dirty();
+    },
+    prepare(sql) {
+      return {
+        get: (...params) => withStmt(sql, params, (st) => (st.step() ? st.getAsObject() : undefined)),
+        all: (...params) => withStmt(sql, params, (st) => {
+          const rows = [];
+          while (st.step()) rows.push(st.getAsObject());
+          return rows;
+        }),
+        run: (...params) => {
+          withStmt(sql, params, (st) => st.step());
+          const changes = raw.getRowsModified();
+          const lastInsertRowid = raw.exec('SELECT last_insert_rowid()')[0].values[0][0];
+          dirty();
+          return { changes, lastInsertRowid };
+        },
+      };
+    },
+  };
+}
+
+/**
+ * Opens the database with the best available SQLite driver.
+ * Set IPHIX_DB_DRIVER=sqljs to force the fallback (used in tests).
+ */
+async function openDb(file) {
+  if (file !== ':memory:') fs.mkdirSync(path.dirname(file), { recursive: true });
+  const db = (process.env.IPHIX_DB_DRIVER !== 'sqljs' && openNative(file)) || await openSqlJs(file);
+  db.exec('PRAGMA foreign_keys = ON;');
   db.exec(SCHEMA);
   migrate(db);
 

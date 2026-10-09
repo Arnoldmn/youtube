@@ -19,7 +19,7 @@ let server;
 let base;
 
 test.before(async () => {
-  const db = openDb(':memory:');
+  const db = await openDb(':memory:');
   seed(db, config);
   server = createApp({ db, config }).listen(0);
   await new Promise((r) => server.once('listening', r));

@@ -49,7 +49,7 @@ let db;
 const callbackToken = auth.hmac('test-secret', 'mpesa-callback').replace(/[^A-Za-z0-9]/g, '').slice(0, 32);
 
 test.before(async () => {
-  db = openDb(':memory:');
+  db = await openDb(':memory:');
   seed(db, config);
   server = createApp({ db, config, mpesa: createMpesa(config, fakeFetch) }).listen(0);
   await new Promise((r) => server.once('listening', r));
@@ -204,7 +204,7 @@ test('manual Paybill code → verifying → admin confirms', async () => {
 });
 
 test('STK is refused cleanly when Daraja is not configured', async () => {
-  const d = openDb(':memory:');
+  const d = await openDb(':memory:');
   seed(d, config);
   const s = createApp({ db: d, config, mpesa: { enabled: false } }).listen(0);
   await new Promise((r) => s.once('listening', r));

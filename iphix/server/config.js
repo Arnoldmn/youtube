@@ -5,7 +5,18 @@ const crypto = require('crypto');
 
 const root = path.join(__dirname, '..');
 const envFile = path.join(root, '.env');
-if (fs.existsSync(envFile) && typeof process.loadEnvFile === 'function') process.loadEnvFile(envFile);
+// Load .env without overriding variables already set (e.g. in cPanel's Node.js App screen).
+// Parsed by hand so it also works on Node versions without process.loadEnvFile.
+if (fs.existsSync(envFile)) {
+  for (const line of fs.readFileSync(envFile, 'utf8').split(/\r?\n/)) {
+    const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/.exec(line);
+    if (!m || line.trim().startsWith('#') || process.env[m[1]] !== undefined) continue;
+    let value = m[2];
+    if (/^(['"]).*\1$/.test(value)) value = value.slice(1, -1);
+    else value = value.replace(/\s+#.*$/, '');
+    process.env[m[1]] = value;
+  }
+}
 
 const env = process.env;
 const num = (v, d) => (v === undefined || v === '' ? d : Number(v));
@@ -34,7 +45,8 @@ module.exports = {
   secureCookies: baseUrl.startsWith('https://'),
   storeName: env.STORE_NAME || 'IPHIX COMMUNICATIONS',
   storeAddress: env.STORE_ADDRESS || '',
-  whatsappNumber: digits(env.WHATSAPP_NUMBER) || '254700000000',
+  // IPHIX business WhatsApp: 0702 222272
+  whatsappNumber: digits(env.WHATSAPP_NUMBER) || '254702222272',
   countryCode: digits(env.DEFAULT_COUNTRY_CODE) || '254',
   currency: env.CURRENCY || 'KES',
   deliveryFee: num(env.DELIVERY_FEE, 300),

@@ -10,13 +10,13 @@ An AliExpress-style shop for **phone accessories, phone spare parts and repair s
 - **Catalogue:** Accessories | Phone Spares | Repair Services | Brands | New Arrivals | Deals. Spares are also grouped by brand: Samsung, iPhone, Tecno, Infinix, Xiaomi/Redmi, Oppo, Vivo, plus Realme, Nokia, Huawei, Honor, Motorola and OnePlus ready for when stock arrives. About 260 starter products come pre-loaded.
 - **Wholesale pricing:** the price per piece drops automatically when someone orders 10 or more of the same item.
 
-Tech: Node.js 22.13+ (it uses the built-in SQLite, so there is no database server to install), Express, PDFKit, and plain HTML/CSS/JS on the front end with no build step.
+Tech: Node.js 18 or newer, Express, PDFKit, and plain HTML/CSS/JS on the front end with no build step. The database is SQLite in a single file (`data/iphix.db`), so there is no database server to install. On Node 22.13+ it uses Node's built-in SQLite; on older versions it switches automatically to `sql.js`.
 
 ## Run it locally
 
 ```bash
 cd iphix
-cp .env.example .env      # then edit WHATSAPP_NUMBER, SESSION_SECRET, ADMIN_PASSWORD, BASE_URL…
+cp .env.example .env      # then edit BASE_URL, ADMIN_PASSWORD, SESSION_SECRET…
 npm install
 npm start                 # http://localhost:3000
 npm test                  # API tests (auth, checkout, PDF, tracking, commissions, payouts)
@@ -79,7 +79,7 @@ To test STK push for free, create an app on the Daraja portal and use `MPESA_ENV
 
 ## WhatsApp setup
 
-**Works straight away (no setup):** the site uses click-to-chat links (`wa.me`). Set `WHATSAPP_NUMBER` to your business number in international format with digits only, e.g. `254712345678`.
+**Works straight away (no setup):** the site uses click-to-chat links (`wa.me`). Orders go to the IPHIX business WhatsApp **0702 222272** (`254702222272`). To use a different number, set `WHATSAPP_NUMBER` in international format, digits only.
 
 **Optional: fully automatic messages (WhatsApp Cloud API)**
 
@@ -98,7 +98,9 @@ For privacy, a status is only shared with the phone number used on the order.
 
 ## Deploying
 
-Any host that runs Node 22.13 or newer works: a VPS, Railway, Render or Fly.io.
+**cPanel:** follow [DEPLOY-CPANEL.md](DEPLOY-CPANEL.md). `npm run build:cpanel` builds `dist/iphix-cpanel.zip`, ready to upload, with a production `.env` and freshly generated secrets.
+
+Any other host that runs Node 18 or newer also works: a VPS, Railway, Render or Fly.io.
 
 - Set `BASE_URL=https://your-domain`. Cookies become `Secure` automatically when it starts with https.
 - Set a long random `SESSION_SECRET` and keep it the same across restarts. If it changes, everyone is logged out and old receipt and tracking links stop working.
