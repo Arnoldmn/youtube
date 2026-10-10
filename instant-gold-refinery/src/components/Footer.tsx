@@ -21,6 +21,11 @@ export default function Footer() {
           <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="text-bone hover:text-gold-200">
             WhatsApp · {site.whatsapp.intlDisplay}
           </a>
+          <address className="not-italic text-dust md:text-right">
+            {site.address.building}, {site.address.area}, {site.address.town}
+            <br />
+            {site.address.postal}
+          </address>
           <p className="text-dust">
             © {new Date().getFullYear()} {site.name}. Established {site.established} · {site.country}.
           </p>

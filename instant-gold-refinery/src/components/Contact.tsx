@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { ClockIcon, PhoneIcon, WhatsAppIcon } from "./Icons";
-import { site, whatsappLink } from "@/lib/site";
+import { ArrowIcon, ClockIcon, MailIcon, PhoneIcon, PinIcon, WhatsAppIcon } from "./Icons";
+import { mapsEmbed, mapsLink, site, whatsappLink } from "@/lib/site";
 
 const services = ["Smelting", "Assay / testing", "Refining", "Sell my gold", "Bullion casting", "Other"];
 
@@ -120,6 +120,46 @@ export default function Contact() {
               Send via WhatsApp
             </button>
           </form>
+        </div>
+
+        {/* Location */}
+        <div id="location" className="reveal mt-6 grid overflow-hidden rounded-3xl border hairline bg-ink-900/70 lg:grid-cols-5">
+          <div className="flex flex-col justify-between gap-10 p-6 sm:p-10 lg:col-span-2">
+            <div>
+              <p className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.25em] text-gold-300">
+                <PinIcon className="h-4 w-4" /> Visit the refinery
+              </p>
+              <address className="mt-6 not-italic">
+                <span className="block font-display text-4xl leading-tight text-bone sm:text-5xl">{site.address.building}</span>
+                <span className="mt-2 block font-display text-2xl italic text-gold-200">
+                  {site.address.area}, {site.address.town} — {site.country}
+                </span>
+              </address>
+              <p className="mt-8 flex items-center gap-3 text-dust">
+                <MailIcon className="h-5 w-5 shrink-0 text-gold-300" />
+                {site.address.postal}
+              </p>
+            </div>
+            <a
+              href={mapsLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-magnetic
+              className="group inline-flex w-full items-center justify-center gap-3 rounded-full border border-gold-300/40 px-7 py-4 font-medium text-gold-100 transition-colors hover:bg-gold-300 hover:text-ink-950 sm:w-auto sm:self-start"
+            >
+              Get directions <ArrowIcon className="h-4 w-4 transition group-hover:translate-x-1" />
+            </a>
+          </div>
+          <div className="relative min-h-[320px] lg:col-span-3">
+            <iframe
+              title={`Map showing ${site.name} in ${site.address.area}, ${site.address.town}`}
+              src={mapsEmbed}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="absolute inset-0 h-full w-full border-0 [filter:grayscale(1)_invert(0.92)_sepia(0.35)_hue-rotate(5deg)_contrast(0.9)]"
+            />
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 shadow-[inset_0_0_80px_rgba(7,6,5,0.9)]" />
+          </div>
         </div>
       </div>
     </section>

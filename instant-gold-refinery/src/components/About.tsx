@@ -31,7 +31,7 @@ export default function About() {
             />
             <div className="reveal mt-8 space-y-5 text-lg leading-relaxed text-dust" style={{ ["--delay" as string]: "150ms" }}>
               <p>
-                {site.name} opened its doors in {site.country} in {site.established} with one simple idea: miners,
+                {site.name} opened its doors in {site.address.town}, {site.country} in {site.established} with one simple idea: miners,
                 dealers and jewellers deserve a refinery that is fast, honest and precise — without the waiting, without the
                 mystery.
               </p>

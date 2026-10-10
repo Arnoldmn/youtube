@@ -37,7 +37,13 @@ const jsonLd = {
   description: site.description,
   foundingDate: String(site.established),
   telephone: `+${site.whatsapp.international}`,
-  address: { "@type": "PostalAddress", addressCountry: "KE" },
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: site.address.building,
+    addressLocality: `${site.address.area}, ${site.address.town}`,
+    postOfficeBoxNumber: "20100",
+    addressCountry: "KE",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

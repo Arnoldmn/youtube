@@ -1,4 +1,4 @@
-// Dotted map of Kenya (simplified border, lon/lat) with Nairobi HQ and the
+// Dotted map of Kenya (simplified border, lon/lat) with the Nakuru refinery and the
 // board's home towns. Dots are computed at build time.
 
 const BORDER: [number, number][] = [
@@ -23,19 +23,22 @@ function inside(lon: number, lat: number) {
   return hit;
 }
 
+// Refinery location: Kiamunyu, Nakuru
+const HQ = { name: "Nakuru", lon: 36.07, lat: -0.3 };
+
 const STEP = 0.2;
 const dots: { x: number; y: number; d: number }[] = [];
 for (let lat = 5.6; lat > -4.8; lat -= STEP) {
   for (let lon = 33.8; lon < 42; lon += STEP) {
     if (inside(lon, lat)) {
-      const d = Math.hypot(lon - 36.82, lat + 1.29);
+      const d = Math.hypot(lon - HQ.lon, lat - HQ.lat);
       dots.push({ x: px(lon), y: py(lat), d });
     }
   }
 }
 
-const HQ = { name: "Nairobi", lon: 36.82, lat: -1.29 };
 const towns = [
+  { name: "Nairobi", lon: 36.82, lat: -1.29, dx: 14, anchor: "start" as const },
   { name: "Nyeri", lon: 36.95, lat: -0.42, dx: 14, anchor: "start" as const },
   { name: "Kisumu", lon: 34.76, lat: -0.09, dx: -14, anchor: "end" as const },
   { name: "Mombasa", lon: 39.67, lat: -4.04, dx: -14, anchor: "end" as const },
@@ -46,7 +49,7 @@ export default function KenyaMap() {
   return (
     <div className="relative mx-auto w-full max-w-[560px]">
       <div aria-hidden="true" className="absolute left-[38%] top-[60%] h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-400/25 blur-[80px]" />
-      <svg viewBox="-20 -10 540 640" className="relative h-auto w-full overflow-visible" role="img" aria-label="Map of Kenya highlighting our headquarters in Nairobi">
+      <svg viewBox="-20 -10 540 640" className="relative h-auto w-full overflow-visible" role="img" aria-label="Map of Kenya highlighting our refinery in Kiamunyu, Nakuru">
         <defs>
           <radialGradient id="dotFade" cx={hx} cy={hy} r="420" gradientUnits="userSpaceOnUse">
             <stop offset="0" stopColor="#fff3c4" />
@@ -87,10 +90,10 @@ export default function KenyaMap() {
       </svg>
 
       {/* HQ card */}
-      <div className="absolute rounded-2xl border hairline bg-ink-950/80 p-3 backdrop-blur-md max-sm:scale-90 max-sm:origin-top-left sm:p-4" style={{ left: `${((hx + 20) / 540) * 100 + 4}%`, top: `${((hy + 10) / 640) * 100 + 3}%` }}>
+      <div className="absolute rounded-2xl border hairline bg-ink-950/80 p-3 backdrop-blur-md max-sm:scale-90 max-sm:origin-top-left sm:p-4" style={{ left: "2%", top: `${((hy + 10) / 640) * 100 + 10}%` }}>
         <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-gold-300">HQ · Est. 2019</p>
         <p className="mt-1 font-display text-2xl leading-none text-bone sm:text-3xl">{HQ.name}</p>
-        <p className="mt-2 font-mono text-[10px] tracking-[0.15em] text-dust">1.29° S · 36.82° E</p>
+        <p className="mt-2 font-mono text-[10px] tracking-[0.15em] text-dust">Kiamunyu · 0.30° S · 36.07° E</p>
       </div>
     </div>
   );

@@ -32,7 +32,7 @@ After making changes, rebuild with `npm run build` and upload the contents of th
 
 ## Editing content
 
-- **Business details** (name, year, WhatsApp number, opening hours): `src/lib/site.ts`
+- **Business details** (name, year, WhatsApp number, address, opening hours): `src/lib/site.ts`
 - **WhatsApp**: `whatsapp` in `src/lib/site.ts` — set to Kenya, +254 774 957 883.
 - **About page** (board, CEO quote, timeline milestones, stats): `src/lib/about.ts`.
 - **Board photos**: the portraits in `public/team/` are illustrations. To use real photos, put e.g. `public/team/henry-morton.jpg` (portrait, ~800×1000, plain or transparent background) and change that person's `image` in `src/lib/about.ts`.

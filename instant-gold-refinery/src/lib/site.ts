@@ -19,6 +19,15 @@ export const site = {
 
   country: "Kenya",
 
+  address: {
+    building: "Mograde Apartment, 3rd Floor",
+    area: "Kiamunyu",
+    town: "Nakuru",
+    postal: "P.O. Box 20100, Nakuru GPO",
+    // Used for the "Get directions" link and the embedded map
+    mapQuery: "Kiamunyu, Nakuru, Kenya",
+  },
+
   nav: [
     { href: "/", label: "Home" },
     { href: "/services/", label: "Services" },
@@ -34,6 +43,11 @@ export const site = {
     { days: "Sunday", time: "By appointment" },
   ],
 } as const;
+
+export const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+  `${site.address.building.split(",")[0]}, ${site.address.mapQuery}`,
+)}`;
+export const mapsEmbed = `https://maps.google.com/maps?q=${encodeURIComponent(site.address.mapQuery)}&z=14&output=embed`;
 
 export function whatsappLink(message?: string) {
   const base = `https://wa.me/${site.whatsapp.international}`;
