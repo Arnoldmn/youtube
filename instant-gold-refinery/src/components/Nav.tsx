@@ -1,22 +1,19 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Logo from "./Logo";
 import { WhatsAppIcon } from "./Icons";
-import { whatsappLink } from "@/lib/site";
+import { site, whatsappLink } from "@/lib/site";
 
-const links = [
-  { href: "#services", label: "Services" },
-  { href: "#process", label: "Process" },
-  { href: "#purity", label: "Purity" },
-  { href: "#about", label: "About" },
-  { href: "#faq", label: "FAQ" },
-  { href: "#contact", label: "Contact" },
-];
+const links = site.nav;
+const normalize = (p: string) => (p.endsWith("/") ? p : `${p}/`);
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const pathname = normalize(usePathname() ?? "/");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -36,9 +33,14 @@ export default function Nav() {
         <ul className="hidden items-center gap-1 lg:flex">
           {links.map((l) => (
             <li key={l.href}>
-              <a href={l.href} className="rounded-full px-4 py-2 text-sm text-dust transition hover:bg-white/5 hover:text-bone">
+              <Link
+                href={l.href}
+                aria-current={pathname === l.href ? "page" : undefined}
+                className={`relative rounded-full px-4 py-2 text-sm transition hover:bg-white/5 hover:text-bone ${pathname === l.href ? "text-gold-200" : "text-dust"}`}
+              >
                 {l.label}
-              </a>
+                {pathname === l.href && <span className="absolute inset-x-4 -bottom-0.5 h-px bg-gradient-to-r from-transparent via-gold-300 to-transparent" />}
+              </Link>
             </li>
           ))}
         </ul>
@@ -70,16 +72,21 @@ export default function Nav() {
       <div
         id="mobile-menu"
         className={`mx-auto mt-2 max-w-7xl overflow-hidden rounded-2xl border hairline bg-ink-950/90 backdrop-blur-xl transition-all duration-500 lg:hidden ${
-          open ? "max-h-[480px] opacity-100" : "pointer-events-none max-h-0 opacity-0"
+          open ? "max-h-[520px] opacity-100" : "pointer-events-none max-h-0 opacity-0"
         }`}
       >
         <ul className="p-3">
           {links.map((l) => (
             <li key={l.href}>
-              <a href={l.href} onClick={() => setOpen(false)} className="flex items-center justify-between rounded-xl px-4 py-3 font-display text-2xl text-bone hover:bg-white/5">
+              <Link
+                href={l.href}
+                onClick={() => setOpen(false)}
+                aria-current={pathname === l.href ? "page" : undefined}
+                className={`flex items-center justify-between rounded-xl px-4 py-3 font-display text-2xl hover:bg-white/5 ${pathname === l.href ? "text-gold-200" : "text-bone"}`}
+              >
                 {l.label}
                 <span className="font-mono text-xs text-dust">→</span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

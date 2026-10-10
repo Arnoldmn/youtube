@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SmelterScene from "./SmelterScene";
 import Sparks from "./Sparks";
 import { ArrowIcon, WhatsAppIcon } from "./Icons";
@@ -11,7 +12,7 @@ const stats = [
 
 export default function Hero() {
   return (
-    <section id="top" className="grain relative isolate overflow-hidden pt-28 sm:pt-32">
+    <section className="grain relative isolate overflow-hidden pt-28 sm:pt-32">
       {/* Background light */}
       <div aria-hidden="true" className="absolute inset-0 -z-10">
         <div className="absolute -right-40 top-1/4 h-[720px] w-[720px] rounded-full bg-ember-500/25 blur-[140px]" />
@@ -56,10 +57,10 @@ export default function Hero() {
               <WhatsAppIcon className="h-5 w-5" />
               Book on WhatsApp
             </a>
-            <a href="#process" className="group inline-flex items-center justify-center gap-3 rounded-full border hairline px-7 py-4 font-medium text-bone transition hover:border-gold-300/50 hover:bg-white/5">
+            <Link href="/process/" className="group inline-flex items-center justify-center gap-3 rounded-full border hairline px-7 py-4 font-medium text-bone transition hover:border-gold-300/50 hover:bg-white/5">
               See how we refine
               <ArrowIcon className="h-4 w-4 transition group-hover:translate-x-1" />
-            </a>
+            </Link>
           </div>
 
           <dl className="reveal mt-14 grid max-w-lg grid-cols-3 divide-x divide-gold-300/15 border-y hairline" style={{ ["--delay" as string]: "480ms" }}>

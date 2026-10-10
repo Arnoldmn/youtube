@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Logo from "./Logo";
 import { site, whatsappLink } from "@/lib/site";
 
@@ -9,12 +10,19 @@ export default function Footer() {
           <Logo />
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-dust">{site.description}</p>
         </div>
+        <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          {site.nav.map((l) => (
+            <Link key={l.href} href={l.href} className="text-dust transition hover:text-gold-200">
+              {l.label}
+            </Link>
+          ))}
+        </nav>
         <div className="flex flex-col gap-2 text-sm md:items-end">
           <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="text-bone hover:text-gold-200">
-            WhatsApp · {site.whatsapp.display}
+            WhatsApp · {site.whatsapp.intlDisplay}
           </a>
           <p className="text-dust">
-            © {new Date().getFullYear()} {site.name}. Established {site.established}.
+            © {new Date().getFullYear()} {site.name}. Established {site.established} · {site.country}.
           </p>
         </div>
       </div>

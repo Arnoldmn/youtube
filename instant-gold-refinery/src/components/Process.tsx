@@ -12,7 +12,7 @@ const steps = [
   { title: "Certify & settle", body: "Final weight and purity are documented. Collect your bars or get paid — same day where possible." },
 ];
 
-export default function Process() {
+export default function Process({ heading = true }: { heading?: boolean }) {
   const ref = useRef<HTMLOListElement>(null);
   const [progress, setProgress] = useState(0);
 
@@ -37,17 +37,16 @@ export default function Process() {
   const active = Math.min(steps.length - 1, Math.floor(progress * steps.length));
 
   return (
-    <section id="process" className="relative overflow-hidden border-y hairline bg-ink-900 py-28 sm:py-36">
+    <section id="process" className="relative overflow-clip border-y hairline bg-ink-900 py-28 sm:py-36">
       <div aria-hidden="true" className="absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-ember-600/10 blur-[160px]" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
-        <SectionHeading
-          index="02"
+        {heading && (<SectionHeading
           eyebrow="The process"
           title={<>Six steps. <em className="text-gold">Zero</em> guesswork.</>}
           intro="Transparency is the whole business. You see the scale, you see the assay, you see the pour."
-        />
+        />)}
 
-        <div className="mt-20 grid gap-12 lg:grid-cols-12">
+        <div className={`grid gap-12 lg:grid-cols-12 ${heading ? "mt-20" : ""}`}>
         <div className="hidden lg:col-span-5 lg:block">
           <div className="sticky top-32 overflow-hidden rounded-3xl border hairline bg-ink-950/60 p-10">
             <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-dust">Now at step</p>

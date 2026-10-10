@@ -5,9 +5,16 @@ import "@fontsource-variable/manrope";
 import "@fontsource-variable/jetbrains-mono";
 import "./globals.css";
 import { site } from "@/lib/site";
+import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import Effects from "@/components/Effects";
 
 export const metadata: Metadata = {
-  title: `${site.name} — Gold Smelting, Refining & Assaying since ${site.established}`,
+  title: {
+    default: `${site.name} — Gold Smelting, Refining & Assaying in ${site.country} since ${site.established}`,
+    template: `%s · ${site.name}`,
+  },
   description: site.description,
   openGraph: {
     title: site.name,
@@ -27,6 +34,7 @@ const jsonLd = {
   description: site.description,
   foundingDate: String(site.established),
   telephone: `+${site.whatsapp.international}`,
+  address: { "@type": "PostalAddress", addressCountry: "KE" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -36,7 +44,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <noscript>
           <style>{`.reveal{opacity:1!important;transform:none!important}`}</style>
         </noscript>
-        {children}
+        <Nav />
+        <main>{children}</main>
+        <Footer />
+        <FloatingWhatsApp />
+        <Effects />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

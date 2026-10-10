@@ -10,14 +10,16 @@ const faqs = [
   { q: "What documents should I bring?", a: "Bring a valid ID. Depending on the material and quantity, additional paperwork may be required — ask us on WhatsApp before you come." },
 ];
 
-export default function Faq() {
+export default function Faq({ heading = true }: { heading?: boolean }) {
   return (
-    <section id="faq" className="relative py-28 sm:py-36">
-      <div className="mx-auto grid max-w-7xl gap-16 px-4 sm:px-6 lg:grid-cols-12">
-        <div className="lg:col-span-5">
-          <SectionHeading index="05" eyebrow="Questions" title={<>Asked &amp; <em className="text-gold">answered.</em></>} />
-        </div>
-        <div className="lg:col-span-7">
+    <section id="faq" className={`relative ${heading ? "py-28 sm:py-36" : "pb-28 sm:pb-36"}`}>
+      <div className={`mx-auto grid max-w-7xl gap-16 px-4 sm:px-6 ${heading ? "lg:grid-cols-12" : ""}`}>
+        {heading && (
+          <div className="lg:col-span-5">
+            <SectionHeading eyebrow="Questions" title={<>Asked &amp; <em className="text-gold">answered.</em></>} />
+          </div>
+        )}
+        <div className={heading ? "lg:col-span-7" : "mx-auto w-full max-w-4xl"}>
           <div className="divide-y divide-gold-300/15 border-y hairline">
             {faqs.map((f, i) => (
               <details key={f.q} className="reveal group py-2" style={{ ["--delay" as string]: `${i * 60}ms` }}>

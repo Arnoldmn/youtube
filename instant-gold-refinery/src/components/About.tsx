@@ -10,7 +10,7 @@ const values = [
 
 export default function About() {
   return (
-    <section id="about" className="relative overflow-hidden border-y hairline bg-ink-900 py-28 sm:py-36">
+    <section id="story" className="relative overflow-hidden border-y hairline bg-ink-900 py-28 sm:py-36">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="grid gap-16 lg:grid-cols-12">
           <div className="lg:col-span-5">
@@ -20,20 +20,19 @@ export default function About() {
                 <br />
                 {String(site.established).slice(2)}
               </p>
-              <p className="mt-6 font-mono text-xs uppercase tracking-[0.3em] text-dust">The year we lit the first furnace</p>
+              <p className="mt-6 font-mono text-xs uppercase tracking-[0.3em] text-dust">Proudly Kenyan · The year we lit the first furnace</p>
             </div>
           </div>
 
           <div className="lg:col-span-7">
             <SectionHeading
-              index="04"
-              eyebrow={`Since ${site.established}`}
+              eyebrow="Our story"
               title={<>Built on trust, <em className="text-gold">tested</em> by fire.</>}
             />
             <div className="reveal mt-8 space-y-5 text-lg leading-relaxed text-dust" style={{ ["--delay" as string]: "150ms" }}>
               <p>
-                {site.name} opened its doors in {site.established} with one simple idea: miners, dealers and
-                jewellers deserve a refinery that is fast, honest and precise — without the waiting, without the
+                {site.name} opened its doors in {site.country} in {site.established} with one simple idea: miners,
+                dealers and jewellers deserve a refinery that is fast, honest and precise — without the waiting, without the
                 mystery.
               </p>
               <p>

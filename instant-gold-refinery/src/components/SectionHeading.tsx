@@ -1,9 +1,9 @@
-export default function SectionHeading({ index, eyebrow, title, intro }: { index: string; eyebrow: string; title: React.ReactNode; intro?: string }) {
+export default function SectionHeading({ index, eyebrow, title, intro }: { index?: string; eyebrow: string; title: React.ReactNode; intro?: string }) {
   return (
     <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
       <div className="lg:col-span-7">
         <p className="reveal flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.3em] text-gold-300">
-          <span className="text-dust">{index}</span>
+          {index && <span className="text-dust">{index}</span>}
           <span className="h-px w-10 bg-gold-300/40" />
           {eyebrow}
         </p>

@@ -12,10 +12,21 @@ export const site = {
     // Number as people write it locally.
     display: "0774 957 883",
     local: "0774957883",
-    // International format WITHOUT "+" or spaces, used for wa.me links.
-    // Country code assumed +256 (Uganda). Change to e.g. "263774957883" for Zimbabwe.
-    international: "256774957883",
+    // Kenya (+254), without "+" or spaces — used for wa.me and tel: links.
+    international: "254774957883",
+    intlDisplay: "+254 774 957 883",
   },
+
+  country: "Kenya",
+
+  nav: [
+    { href: "/", label: "Home" },
+    { href: "/services/", label: "Services" },
+    { href: "/process/", label: "Process" },
+    { href: "/about/", label: "About" },
+    { href: "/faq/", label: "FAQ" },
+    { href: "/contact/", label: "Contact" },
+  ],
 
   hours: [
     { days: "Monday – Friday", time: "08:00 – 18:00" },
@@ -23,8 +34,6 @@ export const site = {
     { days: "Sunday", time: "By appointment" },
   ],
 } as const;
-
-export const yearsActive = () => new Date().getFullYear() - site.established;
 
 export function whatsappLink(message?: string) {
   const base = `https://wa.me/${site.whatsapp.international}`;

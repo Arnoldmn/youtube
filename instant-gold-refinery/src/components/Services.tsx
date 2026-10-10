@@ -43,18 +43,17 @@ const services = [
   },
 ];
 
-export default function Services() {
+export default function Services({ heading = true }: { heading?: boolean }) {
   return (
-    <section id="services" className="relative py-28 sm:py-36">
+    <section id="services" className={`relative ${heading ? "py-28 sm:py-36" : "pb-28 sm:pb-36"}`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <SectionHeading
-          index="01"
+        {heading && (<SectionHeading
           eyebrow="What we do"
           title={<>Every step from <em className="text-gold">fire</em> to fine.</>}
           intro="One roof, one chain of custody. Bring us raw material and leave with certified gold — or cash."
-        />
+        />)}
 
-        <div className="mt-16 grid gap-4 md:grid-cols-3">
+        <div className={`grid gap-4 md:grid-cols-3 ${heading ? "mt-16" : ""}`}>
           {services.map(({ icon: Icon, title, body, tag, wide }, i) => (
             <article
               key={title}

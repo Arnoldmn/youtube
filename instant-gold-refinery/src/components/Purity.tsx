@@ -33,7 +33,6 @@ export default function Purity() {
     <section id="purity" className="relative py-28 sm:py-36">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <SectionHeading
-          index="03"
           eyebrow="Know your metal"
           title={<>Not all gold is <em className="text-gold">gold.</em></>}
           intro="Slide through the karats to see how purity changes the colour and the value. We tell you exactly where your metal sits — before we make an offer."

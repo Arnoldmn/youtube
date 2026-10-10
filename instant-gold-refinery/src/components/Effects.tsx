@@ -1,9 +1,12 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 /** Page-wide behaviours: scroll reveals and cursor-tracked glow on `.spotlight` cards. */
 export default function Effects() {
+  const pathname = usePathname();
+
   useEffect(() => {
     const io = new IntersectionObserver(
       (entries) => {
@@ -16,7 +19,7 @@ export default function Effects() {
       },
       { rootMargin: "0px 0px -8% 0px", threshold: 0.1 },
     );
-    document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+    document.querySelectorAll(".reveal:not(.is-visible)").forEach((el) => io.observe(el));
 
     const onMove = (ev: PointerEvent) => {
       const card = (ev.target as Element | null)?.closest<HTMLElement>(".spotlight");
@@ -31,7 +34,7 @@ export default function Effects() {
       io.disconnect();
       document.removeEventListener("pointermove", onMove);
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }

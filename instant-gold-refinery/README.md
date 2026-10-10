@@ -2,6 +2,8 @@
 
 Next.js 16 + Tailwind CSS 4. Static export, so it runs on any cPanel host with no Node.js needed.
 
+Pages: `/` (home), `/services/`, `/process/`, `/about/`, `/faq/`, `/contact/` — each is its own folder in `src/app/`. To add a page, create `src/app/<name>/page.tsx` and add it to `nav` in `src/lib/site.ts`.
+
 ## 1. Test locally
 
 Requires [Node.js 20+](https://nodejs.org).
@@ -31,8 +33,10 @@ After making changes, rebuild with `npm run build` and upload the contents of th
 ## Editing content
 
 - **Business details** (name, year, WhatsApp number, opening hours): `src/lib/site.ts`
-- **WhatsApp country code**: `whatsapp.international` in `src/lib/site.ts`. It is set to `256774957883` (Uganda, +256). For Zimbabwe use `263774957883`.
-- Sections live in `src/components/` (`Hero`, `Services`, `Process`, `Purity`, `About`, `Faq`, `Contact`).
+- **WhatsApp**: `whatsapp` in `src/lib/site.ts` — set to Kenya, +254 774 957 883.
+- **About page** (board, CEO quote, timeline milestones, stats): `src/lib/about.ts`.
+- **Board photos**: the portraits in `public/team/` are illustrations. To use real photos, put e.g. `public/team/henry-morton.jpg` (portrait, ~800×1000, plain or transparent background) and change that person's `image` in `src/lib/about.ts`.
+- Sections live in `src/components/` (`Hero`, `Services`, `Process`, `Purity`, `About`, `Timeline`, `CeoMessage`, `Board`, `Faq`, `Contact`).
 - The hero illustration is a hand-drawn animated SVG (`SmelterScene.tsx`) with canvas sparks (`Sparks.tsx`).
 
 ## Contact form
