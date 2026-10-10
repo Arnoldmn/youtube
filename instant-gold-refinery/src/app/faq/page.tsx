@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import PageHeader from "@/components/PageHeader";
+import PageHero from "@/components/PageHero";
+import AuTile from "@/components/heroes/AuTile";
+import { GhostLink, WhatsAppButton } from "@/components/Buttons";
 import Faq from "@/components/Faq";
 import CtaBand from "@/components/CtaBand";
 
@@ -11,7 +13,20 @@ export const metadata: Metadata = {
 export default function FaqPage() {
   return (
     <>
-      <PageHeader eyebrow="FAQ" title={<>Asked &amp; <em className="text-gold">answered.</em></>} intro="Can't find your question? Ask us directly on WhatsApp — we reply fast." />
+      <PageHero
+        crumb="FAQ"
+        watermark="Answers"
+        lines={["Asked &", <><em className="text-gold">answered.</em></>]}
+        intro="Everything you want to know before you bring your gold in. Can't find your question? Ask us on WhatsApp — we reply fast."
+        actions={
+          <>
+            <WhatsAppButton message="Hello, I have a question about your services.">Ask a question</WhatsAppButton>
+            <GhostLink href="/process/">See the process</GhostLink>
+          </>
+        }
+        visual={<AuTile />}
+      />
+      <div className="pt-8" />
       <Faq heading={false} />
       <CtaBand />
     </>

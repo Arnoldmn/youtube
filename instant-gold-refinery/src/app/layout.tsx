@@ -9,6 +9,9 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import Effects from "@/components/Effects";
+import Preloader, { preloaderScript } from "@/components/fx/Preloader";
+import SmoothScroll from "@/components/fx/SmoothScroll";
+import Cursor from "@/components/fx/Cursor";
 
 export const metadata: Metadata = {
   title: {
@@ -39,16 +42,22 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: preloaderScript }} />
+      </head>
       <body>
+        <Preloader />
         <noscript>
-          <style>{`.reveal{opacity:1!important;transform:none!important}`}</style>
+          <style>{`.reveal{opacity:1!important;transform:none!important}.line-mask>span{transform:none!important}.preloader{display:none!important}`}</style>
         </noscript>
         <Nav />
         <main>{children}</main>
         <Footer />
         <FloatingWhatsApp />
         <Effects />
+        <SmoothScroll />
+        <Cursor />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

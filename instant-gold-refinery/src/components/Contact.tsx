@@ -26,21 +26,12 @@ export default function Contact() {
   const field = "w-full rounded-xl border hairline bg-ink-950/70 px-4 py-3.5 text-bone placeholder:text-dust/50 outline-none transition focus:border-gold-300/60 focus:ring-4 focus:ring-gold-300/10";
 
   return (
-    <section id="contact" className="grain relative isolate overflow-hidden pb-28 pt-36 sm:pb-36 sm:pt-44">
+    <section id="enquiry" className="grain relative isolate overflow-hidden pb-28 pt-8 sm:pb-36">
       <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-10 h-[70%] bg-gradient-to-t from-ember-600/20 via-gold-500/5 to-transparent" />
       <div aria-hidden="true" className="absolute bottom-[-30%] left-1/2 -z-10 h-[600px] w-[1100px] -translate-x-1/2 rounded-full bg-gold-400/20 blur-[160px]" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="text-center">
-          <p className="reveal font-mono text-[11px] uppercase tracking-[0.3em] text-gold-300">Get in touch</p>
-          <h2 className="reveal mx-auto mt-6 max-w-4xl font-display text-[clamp(2.8rem,7vw,6.5rem)] leading-[0.95] text-bone" style={{ ["--delay" as string]: "100ms" }}>
-            Bring us your gold.
-            <br />
-            <em className="text-gold text-gold-animated">We&rsquo;ll bring the fire.</em>
-          </h2>
-        </div>
-
-        <div className="mt-16 grid gap-6 lg:grid-cols-5">
+        <div className="grid gap-6 lg:grid-cols-5">
           {/* Direct contact */}
           <div className="reveal flex flex-col gap-4 lg:col-span-2">
             <a

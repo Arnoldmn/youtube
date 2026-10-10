@@ -37,7 +37,8 @@ After making changes, rebuild with `npm run build` and upload the contents of th
 - **About page** (board, CEO quote, timeline milestones, stats): `src/lib/about.ts`.
 - **Board photos**: the portraits in `public/team/` are illustrations. To use real photos, put e.g. `public/team/henry-morton.jpg` (portrait, ~800×1000, plain or transparent background) and change that person's `image` in `src/lib/about.ts`.
 - Sections live in `src/components/` (`Hero`, `Services`, `Process`, `Purity`, `About`, `Timeline`, `CeoMessage`, `Board`, `Faq`, `Contact`).
-- The hero illustration is a hand-drawn animated SVG (`SmelterScene.tsx`) with canvas sparks (`Sparks.tsx`).
+- Every page opens with its own full-screen hero (`PageHero.tsx`) over a live WebGL liquid-gold background (`fx/GoldShader.tsx`). Page visuals live in `src/components/heroes/`: 3D gold bar (Services), process ring (Process), Kenya map (About), Au element tile (FAQ), WhatsApp phone (Contact). The Home hero is the animated smelting scene (`SmelterScene.tsx` + `Sparks.tsx`).
+- Site-wide effects: first-visit intro (`fx/Preloader.tsx`), smooth scrolling (`fx/SmoothScroll.tsx`, Lenis), custom cursor (`fx/Cursor.tsx`). All respect the visitor's "reduce motion" setting.
 
 ## Contact form
 
