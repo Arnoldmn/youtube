@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+
+  --color-ink-950: #070605;
+  --color-ink-900: #0d0b09;
+  --color-ink-800: #16120e;
+  --color-ink-700: #221c15;
+  --color-ink-600: #342b20;
+
+  --color-bone: #f1e8d8;
+  --color-dust: #a99b86;
+
+  --color-gold-50: #fff8e1;
+  --color-gold-100: #fdecb3;
+  --color-gold-200: #f9d878;
+  --color-gold-300: #f3c14a;
+  --color-gold-400: #e6a822;
+  --color-gold-500: #c98b12;
+  --color-gold-600: #a06c0c;
+  --color-gold-700: #7a510a;
+
+  --color-ember-400: #ff8f3a;
+  --color-ember-500: #ff6a1a;
+  --color-ember-600: #d9480f;
+
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-flow: flow 0.9s linear infinite;
+  --animate-flicker: flicker 3.2s ease-in-out infinite;
+  --animate-rise: rise 9s ease-in infinite;
+  --animate-shine: shine 6s ease-in-out infinite;
+
+  @keyframes marquee {
+    to { transform: translateX(-50%); }
+  }
+  @keyframes flow {
+    to { stroke-dashoffset: -60; }
+  }
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    20% { opacity: 0.86; }
+    45% { opacity: 0.97; }
+    60% { opacity: 0.8; }
+    80% { opacity: 0.94; }
+  }
+  @keyframes rise {
+    0% { transform: translateY(0) scale(1); opacity: 0; }
+    15% { opacity: 0.5; }
+    100% { transform: translateY(-260px) scale(2.4); opacity: 0; }
+  }
+  @keyframes shine {
+    0%, 60% { background-position: 200% 0; }
+    100% { background-position: -100% 0; }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+  body {
+    background: var(--color-ink-950);
+    color: var(--color-bone);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--color-gold-300);
+    color: var(--color-ink-950);
+  }
+}
+
+@layer components {
+  /* Polished-metal text */
+  .text-gold {
+    background: linear-gradient(
+      100deg,
+      #8a5c0a 0%,
+      #f3c14a 22%,
+      #fff3c4 38%,
+      #e6a822 52%,
+      #a06c0c 70%,
+      #f9d878 88%,
+      #c98b12 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gold-animated {
+    animation: var(--animate-shine);
+  }
+
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.07;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  .hairline {
+    border-color: color-mix(in oklab, var(--color-gold-300) 14%, transparent);
+  }
+
+  /* Card with a cursor-following glow; set --mx / --my from JS */
+  .spotlight {
+    position: relative;
+    isolation: isolate;
+  }
+  .spotlight::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: radial-gradient(
+      420px circle at var(--mx, 50%) var(--my, 0%),
+      color-mix(in oklab, var(--color-gold-300) 70%, transparent),
+      transparent 45%
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: -1;
+  }
+  .spotlight:hover::before {
+    opacity: 1;
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.9s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: var(--delay, 0ms);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
