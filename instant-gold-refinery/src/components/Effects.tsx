@@ -8,6 +8,9 @@ export default function Effects() {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Tells the <head> fail-safe that the app started normally
+    (window as Window & { __igrReady?: boolean }).__igrReady = true;
+
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {

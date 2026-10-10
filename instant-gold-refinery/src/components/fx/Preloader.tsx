@@ -66,5 +66,10 @@ export default function Preloader() {
   );
 }
 
-/** Inline in <head>: skip the intro for return visits within the session. */
-export const preloaderScript = `try{if(sessionStorage.getItem("${KEY}")||matchMedia("(prefers-reduced-motion: reduce)").matches){var d=document.documentElement.dataset;d.loaded=d.skipIntro="true"}}catch(e){var d=document.documentElement.dataset;d.loaded=d.skipIntro="true"}`;
+/**
+ * Inline in <head>, so it runs even if the main scripts never load:
+ * - skips the intro for return visits within the session;
+ * - fail-safe: if the app hasn't started after 4 s (old browser, stalled mobile
+ *   data), drop the intro and show all content without animation.
+ */
+export const preloaderScript = `(function(){var h=document.documentElement,d=h.dataset;try{if(sessionStorage.getItem("${KEY}")||matchMedia("(prefers-reduced-motion: reduce)").matches){d.loaded=d.skipIntro="true"}}catch(e){d.loaded=d.skipIntro="true"}setTimeout(function(){if(!window.__igrReady){h.classList.add("no-anim");d.loaded="true"}},4000)})()`;

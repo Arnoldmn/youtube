@@ -241,3 +241,9 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 html[data-skip-intro] .preloader { display: none; }
+
+/* Fail-safe (see Preloader.tsx): show everything if the app could not start */
+html.no-anim .reveal,
+html.no-anim .reveal.is-visible { opacity: 1 !important; transform: none !important; }
+html.no-anim .line-mask > span { transform: none !important; }
+html.no-anim .preloader { display: none !important; }
